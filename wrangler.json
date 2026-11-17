@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/wrangler.json",
+  "name": "rove-barbershop",
+  "compatibility_date": "2026-11-17",
+  "assets": {
+    "directory": "./dist"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
