@@ -42,7 +42,7 @@ create table if not exists promos (
 create table if not exists bookings (
   id uuid primary key default gen_random_uuid(),
   nomor text unique not null,
-  tgl_buat date not null,
+  tgl_buat date not null default ((now() at time zone 'Asia/Jakarta')::date),
   items jsonb not null default '[]'::jsonb,
   svc_nama text not null,
   harga int not null default 0,
@@ -146,72 +146,117 @@ alter table shifts enable row level security;
 alter table settings enable row level security;
 
 -- Kebijakan Publik (Tanpa Login)
+drop policy if exists "pub_read_services" on services;
 create policy "pub_read_services" on services for select to anon, authenticated using (true);
+
+drop policy if exists "pub_read_settings" on settings;
 create policy "pub_read_settings" on settings for select to anon, authenticated using (true);
 
 -- Kebijakan Profiles
+drop policy if exists "staff_read_profiles" on profiles;
 create policy "staff_read_profiles" on profiles for select to authenticated
   using (is_staff() and (id = auth.uid() or role = 'capster' or is_owner()));
+
+drop policy if exists "owner_all_profiles" on profiles;
 create policy "owner_all_profiles" on profiles for all to authenticated
   using (is_owner()) with check (is_owner());
 
 -- Kebijakan Services & Promos
+drop policy if exists "owner_all_services" on services;
 create policy "owner_all_services" on services for all to authenticated
   using (is_owner()) with check (is_owner());
+
+drop policy if exists "staff_read_promos" on promos;
 create policy "staff_read_promos" on promos for select to authenticated
   using (is_staff());
+
+drop policy if exists "owner_all_promos" on promos;
 create policy "owner_all_promos" on promos for all to authenticated
   using (is_owner()) with check (is_owner());
 
 -- Kebijakan Bookings
+drop policy if exists "staff_read_bookings" on bookings;
 create policy "staff_read_bookings" on bookings for select to authenticated
   using (is_staff());
+
+drop policy if exists "staff_update_bookings" on bookings;
 create policy "staff_update_bookings" on bookings for update to authenticated
   using (is_staff()) with check (is_staff());
+
+drop policy if exists "owner_delete_bookings" on bookings;
 create policy "owner_delete_bookings" on bookings for delete to authenticated
   using (is_owner());
 
 -- Kebijakan Sales
+drop policy if exists "staff_read_sales" on sales;
 create policy "staff_read_sales" on sales for select to authenticated
   using (is_staff());
+
+drop policy if exists "staff_insert_sales" on sales;
 create policy "staff_insert_sales" on sales for insert to authenticated
   with check (is_staff());
+
+drop policy if exists "owner_update_del_sales" on sales;
 create policy "owner_update_del_sales" on sales for update to authenticated
   using (is_owner()) with check (is_owner());
+
+drop policy if exists "owner_del_sales" on sales;
 create policy "owner_del_sales" on sales for delete to authenticated
   using (is_owner());
 
 -- Kebijakan Expenses (Staf tidak bisa melihat & menambah Gaji)
+drop policy if exists "staff_read_expenses" on expenses;
 create policy "staff_read_expenses" on expenses for select to authenticated
   using (is_staff() and (kategori <> 'Gaji' or is_owner()));
+
+drop policy if exists "staff_insert_expenses" on expenses;
 create policy "staff_insert_expenses" on expenses for insert to authenticated
   with check (is_staff() and (kategori in ('Barang', 'Jasa') or is_owner()));
+
+drop policy if exists "owner_all_expenses" on expenses;
 create policy "owner_all_expenses" on expenses for all to authenticated
   using (is_owner()) with check (is_owner());
 
 -- Kebijakan Shifts
+drop policy if exists "staff_read_shifts" on shifts;
 create policy "staff_read_shifts" on shifts for select to authenticated
   using (is_staff());
+
+drop policy if exists "staff_insert_shifts" on shifts;
 create policy "staff_insert_shifts" on shifts for insert to authenticated
   with check (is_staff() and uid = auth.uid());
+
+drop policy if exists "staff_update_shifts" on shifts;
 create policy "staff_update_shifts" on shifts for update to authenticated
   using (is_staff() and (uid = auth.uid() or is_owner()));
+
+drop policy if exists "owner_all_shifts" on shifts;
 create policy "owner_all_shifts" on shifts for all to authenticated
   using (is_owner()) with check (is_owner());
 
 -- Kebijakan Settings
+drop policy if exists "owner_all_settings" on settings;
 create policy "owner_all_settings" on settings for all to authenticated
   using (is_owner()) with check (is_owner());
 
--- 6. RPC RESERVASI PUBLIK (Validasi server: jam 10:00-20:30, minimal 3 jam sebelum, anti bentrok 30 menit)
-create or replace function buat_booking(p jsonb) returns jsonb
+-- 6. RPC RESERVASI PUBLIK (6 parameter langsung cocok dengan BookingPage.jsx, anti bentrok 30 menit + advisory lock)
+drop function if exists public.buat_booking(jsonb);
+
+create or replace function public.buat_booking(
+  "svcIds" uuid[],
+  tanggal date,
+  jam text,
+  "kapId" uuid,
+  nama text,
+  wa text
+) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
-  v_tgl date;
-  v_jam text := p->>'jam';
+  v_tgl date := tanggal;
+  v_jam text := jam;
   v_min int;
   v_ts timestamptz;
-  v_kapid uuid;
+  v_kapid uuid := "kapId";
   v_kap_nama text;
   v_items jsonb := '[]'::jsonb;
   v_total int := 0;
@@ -220,20 +265,15 @@ declare
   v_row record;
   v_n int;
   v_today date := (now() at time zone 'Asia/Jakarta')::date;
-  v_nama text := left(trim(coalesce(p->>'nama', '')), 60);
-  v_wa text := regexp_replace(coalesce(p->>'wa', ''), '\D', '', 'g');
+  v_nama text := left(trim(coalesce(nama, '')), 60);
+  v_wa text := regexp_replace(coalesce(wa, ''), '\D', '', 'g');
   v_nomor text;
   v_inserted bookings%rowtype;
 begin
   if v_nama = '' then raise exception 'Nama wajib diisi.'; end if;
   if v_wa !~ '^62[0-9]{8,13}$' then raise exception 'Nomor WhatsApp tidak valid.'; end if;
   if coalesce(v_jam, '') !~ '^[0-2][0-9]:[0-5][0-9]$' then raise exception 'Format jam salah.'; end if;
-
-  begin
-    v_tgl := (p->>'tanggal')::date;
-  exception when others then
-    raise exception 'Tanggal tidak valid.';
-  end;
+  if v_tgl is null then raise exception 'Tanggal tidak valid.'; end if;
 
   v_min := split_part(v_jam, ':', 1)::int * 60 + split_part(v_jam, ':', 2)::int;
   if v_min < 600 or v_min > 1230 then raise exception 'Jam layanan 10:00 sampai 20:30.'; end if;
@@ -243,19 +283,18 @@ begin
     raise exception 'Waktu ini sudah lewat batas booking (minimal 3 jam sebelum layanan).';
   end if;
 
-  begin
-    v_kapid := (p->>'kapId')::uuid;
-  exception when others then
-    raise exception 'Capster tidak valid.';
-  end;
-
+  if v_kapid is null then raise exception 'Capster tidak valid.'; end if;
   select name into v_kap_nama from profiles where id = v_kapid and role = 'capster';
   if v_kap_nama is null then raise exception 'Capster tidak ditemukan.'; end if;
 
-  for v_sid in select (jsonb_array_elements_text(coalesce(p->'svcIds', '[]'::jsonb)))::uuid loop
-    select nama, harga into v_row from services where id = v_sid;
+  if "svcIds" is null or array_length("svcIds", 1) is null then
+    raise exception 'Pilih minimal satu layanan.';
+  end if;
+
+  foreach v_sid in array "svcIds" loop
+    select id, nama, harga into v_row from services where id = v_sid;
     if found then
-      v_items := v_items || jsonb_build_array(jsonb_build_object('nama', v_row.nama, 'harga', v_row.harga));
+      v_items := v_items || jsonb_build_array(jsonb_build_object('id', v_row.id, 'nama', v_row.nama, 'harga', v_row.harga));
       v_total := v_total + v_row.harga;
       v_names := v_names || case when v_names = '' then '' else ', ' end || v_row.nama;
     end if;
@@ -267,11 +306,11 @@ begin
   perform pg_advisory_xact_lock(hashtext('rove_booking_' || v_kapid::text || '_' || v_tgl::text));
 
   if exists (
-    select 1 from bookings
-    where kap_id = v_kapid
-      and tanggal = v_tgl
-      and status in ('Baru', 'Hadir')
-      and abs((split_part(jam, ':', 1)::int * 60 + split_part(jam, ':', 2)::int) - v_min) < 30
+    select 1 from bookings b
+    where b.kap_id = v_kapid
+      and b.tanggal = v_tgl
+      and b.status in ('Baru', 'Hadir')
+      and abs((split_part(b.jam, ':', 1)::int * 60 + split_part(b.jam, ':', 2)::int) - v_min) < 30
   ) then
     raise exception 'Capster sudah dipesan di waktu ini. Pilih jam atau capster lain.';
   end if;
@@ -287,8 +326,8 @@ begin
 end;
 $$;
 
-revoke all on function buat_booking(jsonb) from public;
-grant execute on function buat_booking(jsonb) to anon, authenticated;
+revoke all on function public.buat_booking(uuid[], date, text, uuid, text, text) from public;
+grant execute on function public.buat_booking(uuid[], date, text, uuid, text, text) to anon, authenticated;
 
 -- 7. AKTIFKAN REALTIME UNTUK SEMUA TABEL
 do $$ begin
@@ -296,7 +335,10 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
--- 8. SETUP OWNER PERTAMA (Jalankan terpisah setelah membuat user admin@rove.app di menu Authentication)
+-- 8. REFRESH SCHEMA CACHE POSTGREST
+notify pgrst, 'reload schema';
+
+-- 9. SETUP OWNER PERTAMA (Jalankan terpisah setelah membuat user admin@rove.app di menu Authentication)
 -- insert into profiles (id, name, username, role)
 -- select id, 'Owner Rove', 'admin', 'owner'
 -- from auth.users where email = 'admin@rove.app'
