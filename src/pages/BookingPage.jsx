@@ -350,8 +350,6 @@ export default function BookingPage() {
 
       <div className="card prof" id="kontak">
         <img className="logo" src="/logo.jpeg" alt={brand.nama} />
-        <h2 className="pn">{brand.nama}</h2>
-        {brand.jargon && <p className="tagl">{brand.jargon}</p>}
         <div className="cl">
           {kontak.wa && (
             <a className="ci" href={`https://wa.me/${kontak.wa}`} target="_blank" rel="noreferrer">

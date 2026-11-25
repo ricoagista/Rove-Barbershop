@@ -169,7 +169,6 @@ export function AppProvider({ children }) {
     const d = settings.utama || {};
     return {
       nama: d.nama || 'Rove Barbershop',
-      jargon: d.jargon == null ? 'Grooming Space in the Town' : d.jargon,
       pol: d.pol == null ? DEF_POL.join('\n') : d.pol,
       jamBuka: settings.operasional?.jam_buka || DEFAULT_JAM_BUKA,
       jamTutup: settings.operasional?.jam_tutup || DEFAULT_JAM_TUTUP,
