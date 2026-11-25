@@ -330,5 +330,6 @@ export default function BookingPage() {
           </ol>
         </div>
       )}
-`r`n    </div>`r`n  );
+    </div>
+  );
 }
