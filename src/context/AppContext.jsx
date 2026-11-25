@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { supabase, isConfigured } from '../lib/supabase';
 import { ld, normWa } from '../utils/format';
 import { playBeep } from '../utils/media';
-import { DEF_POL, DEF_KONTAK } from '../utils/defaults';
+import { DEF_POL, DEF_KONTAK, DEFAULT_JAM_BUKA, DEFAULT_JAM_TUTUP, DEFAULT_BATAS_RESERVASI_TERAKHIR } from '../utils/defaults';
 
 const AppContext = createContext(null);
 
@@ -165,10 +165,10 @@ export function AppProvider({ children }) {
     return {
       nama: d.nama || 'Rove Barbershop',
       jargon: d.jargon == null ? 'Grooming Space in the Town' : d.jargon,
-      bg: d.bg || '#05070f',
-      ol: d.ol || '#1b3bb5',
-      tx: d.tx || '#ffffff',
       pol: d.pol == null ? DEF_POL.join('\n') : d.pol,
+      jamBuka: settings.operasional?.jam_buka || DEFAULT_JAM_BUKA,
+      jamTutup: settings.operasional?.jam_tutup || DEFAULT_JAM_TUTUP,
+      batasReservasiTerakhir: settings.operasional?.batas_reservasi_terakhir || DEFAULT_BATAS_RESERVASI_TERAKHIR,
     };
   })();
 
