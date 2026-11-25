@@ -150,7 +150,8 @@ drop policy if exists "pub_read_services" on services;
 create policy "pub_read_services" on services for select to anon, authenticated using (true);
 
 drop policy if exists "pub_read_settings" on settings;
-create policy "pub_read_settings" on settings for select to anon, authenticated using (true);
+-- Public settings are exposed only through public_booking_settings in the operations migration.
+-- Do not grant anon SELECT on the base settings table.
 
 -- Kebijakan Profiles
 drop policy if exists "staff_read_profiles" on profiles;
@@ -234,7 +235,9 @@ drop policy if exists "owner_all_shifts" on shifts;
 create policy "owner_all_shifts" on shifts for all to authenticated
   using (is_owner()) with check (is_owner());
 
--- Kebijakan Settings
+-- Kebijakan Settings: staf terdaftar dapat membaca, hanya Owner dapat menulis.
+drop policy if exists "staff_read_settings" on settings;
+create policy "staff_read_settings" on settings for select to authenticated using (is_staff());
 drop policy if exists "owner_all_settings" on settings;
 create policy "owner_all_settings" on settings for all to authenticated
   using (is_owner()) with check (is_owner());
