@@ -437,8 +437,8 @@ th, td {
   background: var(--accent);
 }
 
-.prof {
-  text-align: center;
+.policy-last {
+  margin-bottom: 24px;
 }
 
 .prof .logo {
@@ -668,5 +668,6 @@ th, td {
     padding: 2mm 0 8mm;
   }
 }
+
 
 

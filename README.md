@@ -19,7 +19,7 @@ npm run lint
 npm run build
 ```
 
-Logo toko berada di `public/logo.jpeg`. Ikon PWA tidak diubah.
+Logo toko berada di `public/logo.jpeg`. Ikon PWA tidak diubah. Halaman booking berakhir pada Booking Policy; bagian kontak publik dan pengaturan kontak tidak digunakan lagi. Data kontak lama tidak dihapus dari database. Kontak WhatsApp tetap digunakan untuk laporan staf dan hotline pada nota.
 
 ## Migrasi database
 

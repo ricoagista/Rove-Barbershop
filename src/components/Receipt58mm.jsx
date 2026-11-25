@@ -40,6 +40,11 @@ export default function Receipt58mm({ trx }) {
       <div className="nc">
         <img src="/logo.jpeg" alt="Logo" />
         <div>{brand.nama}</div>
+        {brand.jargon && (
+          <div>
+            <b>{brand.jargon}</b>
+          </div>
+        )}
         {kontak.waShow && (
           <div>
             <b>Hotline {fmtPhone(kontak.waShow)}</b>

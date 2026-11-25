@@ -1,14 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
-import { rp, ld, normWa, fmtPhone } from '../utils/format';
+import { rp, ld, normWa } from '../utils/format';
 
 export default function BookingPage() {
   const {
     isConfigured,
     ready,
     brand,
-    kontak,
     services,
     capsters,
     bookedSlots,
@@ -149,13 +148,11 @@ export default function BookingPage() {
           <button className="ghost" onClick={() => setView('login')}>
             Login Staf
           </button>
-          <a className="cu" href="#kontak">
-            Contact Us
-          </a>
         </div>
       </div>
 
       <h1 className="ht">Book Your Session Now</h1>
+      {brand.jargon && <p className="sub">{brand.jargon}</p>}
 
       {!ready ? (
         <div className="card">
@@ -194,19 +191,6 @@ export default function BookingPage() {
             <b className="tot">{rp(doneBooking.harga)}</b>
           </div>
           <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-            {kontak.wa && (
-              <a
-                className="cu"
-                style={{ flex: 1, textAlign: 'center' }}
-                href={`https://wa.me/${kontak.wa}?text=${encodeURIComponent(
-                  `Halo ${brand.nama}, saya sudah booking dengan kode ${doneBooking.nomor} (${doneBooking.nama}) jadwal ${doneBooking.tanggal} jam ${doneBooking.jam} bersama ${doneBooking.kap_nama}.`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Konfirmasi via WA
-              </a>
-            )}
             <button type="button" onClick={resetForm}>
               Booking Lagi
             </button>
@@ -337,7 +321,7 @@ export default function BookingPage() {
       )}
 
       {policyLines.length > 0 && (
-        <div className="card">
+        <div className="card policy-last">
           <h2>Booking Policy</h2>
           <ol className="pol">
             {policyLines.map((line, idx) => (
@@ -346,50 +330,5 @@ export default function BookingPage() {
           </ol>
         </div>
       )}
-
-      <div className="card prof" id="kontak">
-        <img className="logo" src="/logo.jpeg" alt={brand.nama} />
-        <h2 className="pn">{brand.nama}</h2>
-        <div className="cl">
-          {kontak.wa && (
-            <a className="ci" href={`https://wa.me/${kontak.wa}`} target="_blank" rel="noreferrer">
-              <span>WhatsApp:</span>
-              <b>{fmtPhone(kontak.waShow)}</b>
-            </a>
-          )}
-          {kontak.ig && (
-            <a className="ci" href={kontak.ig} target="_blank" rel="noreferrer">
-              <span>Instagram:</span>
-              <b>@{kontak.igTxt}</b>
-            </a>
-          )}
-          {kontak.tt && (
-            <a className="ci" href={kontak.tt} target="_blank" rel="noreferrer">
-              <span>TikTok:</span>
-              <b>@{kontak.ttTxt}</b>
-            </a>
-          )}
-          {kontak.fb && (
-            <a className="ci" href={kontak.fb} target="_blank" rel="noreferrer">
-              <span>Facebook:</span>
-              <b>{kontak.fbTxt}</b>
-            </a>
-          )}
-          {kontak.maps && (
-            <a className="ci" href={kontak.maps} target="_blank" rel="noreferrer">
-              <span>Lokasi Google Maps</span>
-            </a>
-          )}
-        </div>
-        {kontak.email && (
-          <p style={{ marginTop: 12 }}>
-            Email:{' '}
-            <a className="em" href={`mailto:${kontak.email}`}>
-              {kontak.email}
-            </a>
-          </p>
-        )}
-      </div>
-    </div>
-  );
+`r`n    </div>`r`n  );
 }

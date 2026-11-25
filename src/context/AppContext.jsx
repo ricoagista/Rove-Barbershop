@@ -50,8 +50,7 @@ export function AppProvider({ children }) {
           jam_tutup: setRes.data.jam_tutup,
           batas_reservasi_terakhir: setRes.data.batas_reservasi_terakhir,
         },
-        kontak: setRes.data.kontak || prev.kontak,
-        utama: { ...(prev.utama || {}), pol: Array.isArray(setRes.data.booking_policy) ? setRes.data.booking_policy.join('\\n') : prev.utama?.pol },
+        utama: { ...(prev.utama || {}), pol: setRes.data.booking_policy || prev.utama?.pol },
       }));
     }
   }, []);
@@ -169,6 +168,7 @@ export function AppProvider({ children }) {
     const d = settings.utama || {};
     return {
       nama: d.nama || 'Rove Barbershop',
+      jargon: d.jargon == null ? 'Grooming Space in the Town' : d.jargon,
       pol: d.pol == null ? DEF_POL.join('\n') : d.pol,
       jamBuka: settings.operasional?.jam_buka || DEFAULT_JAM_BUKA,
       jamTutup: settings.operasional?.jam_tutup || DEFAULT_JAM_TUTUP,

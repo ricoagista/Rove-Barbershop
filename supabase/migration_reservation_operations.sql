@@ -19,7 +19,6 @@ select
   coalesce((select data->>'jam_buka' from public.settings where id='operasional'),'13:00') as jam_buka,
   coalesce((select data->>'jam_tutup' from public.settings where id='operasional'),'21:00') as jam_tutup,
   coalesce((select data->>'batas_reservasi_terakhir' from public.settings where id='operasional'),'19:00') as batas_reservasi_terakhir,
-  coalesce((select data->'kontak' from public.settings where id='kontak'),'{}'::jsonb) as kontak,
   coalesce((select data->'pol' from public.settings where id='utama'),'[]'::jsonb) as booking_policy;
 create or replace view public.public_booked_slots as
 select id, kap_id, tanggal, jam, 'booking'::text as sumber from public.bookings where status in ('Baru','Hadir')
