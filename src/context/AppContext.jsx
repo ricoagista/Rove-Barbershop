@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { supabase, isConfigured } from '../lib/supabase';
 import { ld, normWa } from '../utils/format';
 import { hexRgb, shade, playBeep } from '../utils/media';
-import { LOGO_BIG, LOGO_SMALL, LOGO_BW, DEF_POL, DEF_KONTAK } from '../utils/defaults';
+import { DEF_POL, DEF_KONTAK } from '../utils/defaults';
 
 const AppContext = createContext(null);
 
@@ -166,9 +166,6 @@ export function AppProvider({ children }) {
     return {
       nama: d.nama || 'Rove Barbershop',
       jargon: d.jargon == null ? 'Grooming Space in the Town' : d.jargon,
-      logo: d.logo || LOGO_BIG,
-      logoSm: d.logo || LOGO_SMALL,
-      logoBw: d.logoBw || LOGO_BW,
       bg: d.bg || '#05070f',
       ol: d.ol || '#1b3bb5',
       tx: d.tx || '#ffffff',

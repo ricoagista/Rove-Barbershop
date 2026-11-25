@@ -43,7 +43,7 @@ export default function LoginPage() {
   return (
     <div className="wrap" style={{ maxWidth: 420, marginTop: 32 }}>
       <div className="card">
-        <img className="logo" src={brand.logo} alt={brand.nama} />
+        <img className="logo" src="/logo.jpeg" alt={brand.nama} />
         <h1 style={{ textAlign: 'center', marginBottom: 4 }}>{brand.nama}</h1>
         <p className="sub">Login Kasir, Capster &amp; Owner</p>
 

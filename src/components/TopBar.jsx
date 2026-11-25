@@ -79,7 +79,7 @@ export default function TopBar({ onSelectTab }) {
   return (
     <>
       <div className="bar">
-        <img src={brand.logoSm} alt="Logo" />
+        <img src="/logo.jpeg" alt="Logo" />
         <div className="t">
           <b>{brand.nama}</b>
           {brand.jargon && (

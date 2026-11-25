@@ -148,7 +148,7 @@ export default function BookingPage() {
   return (
     <div className="wrap">
       <div className="hb">
-        <img className="hl" src={brand.logoSm} alt={brand.nama} />
+        <img className="hl" src="/logo.jpeg" alt={brand.nama} />
         <div className="hr">
           <button className="ghost" onClick={() => setView('login')}>
             Login Staf
@@ -353,7 +353,7 @@ export default function BookingPage() {
       )}
 
       <div className="card prof" id="kontak">
-        <img className="logo" src={brand.logo} alt={brand.nama} />
+        <img className="logo" src="/logo.jpeg" alt={brand.nama} />
         <h2 className="pn">{brand.nama}</h2>
         {brand.jargon && <p className="tagl">{brand.jargon}</p>}
         <div className="cl">
