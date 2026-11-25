@@ -113,12 +113,12 @@ export default function BookingPage() {
     setSubmitting(true);
     try {
       const { data, error } = await supabase.rpc('buat_booking', {
-        svcIds: selectedSvcIds,
-        tanggal,
-        jam,
-        kapId,
-        nama: nama.trim(),
-        wa: cleanWa,
+        p_svc_ids: selectedSvcIds,
+        p_tanggal: tanggal,
+        p_jam: jam,
+        p_kap_id: kapId,
+        p_nama: nama.trim(),
+        p_wa: cleanWa,
       });
       if (error) throw error;
       setDoneBooking(data);
