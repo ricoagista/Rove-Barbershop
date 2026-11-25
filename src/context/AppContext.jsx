@@ -25,7 +25,6 @@ export function AppProvider({ children }) {
 
   const [ready, setReady] = useState(false);
   const [newBkCount, setNewBkCount] = useState(0);
-  const [previewTheme, setPreviewTheme] = useState(null);
 
   const seenBkIds = useRef(null);
   const autoClosedIds = useRef(new Set());

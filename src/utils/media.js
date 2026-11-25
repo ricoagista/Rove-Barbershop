@@ -107,7 +107,7 @@ export async function processNotaImage(file) {
     h = 420;
     w = Math.round((im.width * h) / im.height);
   }
-  return toBW(im, w, h, true, false);
+  return toBW(im, w, h, false, false);
 }
 
 export function playBeep() {

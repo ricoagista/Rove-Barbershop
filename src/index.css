@@ -2,13 +2,13 @@
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  --bg: #05070f;
-  --card: rgba(40, 80, 200, 0.07);
-  --tx: #ffffff;
-  --mu: #9aa3b8;
-  --ac: #a5b8ff;
+  --bg: #121212;
+  --card: #1e1e1e;
+  --tx: #f4efe6;
+  --mu: #a8a196;
+  --ac: #c29b5a;
   --act: #0a1233;
-  --bd: #1b3bb5;
+  --bd: #2e2e2e;
   --bad: #ff9a92;
   color-scheme: dark;
 }
