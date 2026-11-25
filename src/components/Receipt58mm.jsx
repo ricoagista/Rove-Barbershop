@@ -38,7 +38,7 @@ export default function Receipt58mm({ trx }) {
   return (
     <div id="nota">
       <div className="nc">
-        <img src={brand.logoBw} alt="Logo" />
+        <img src="/logo.jpeg" alt="Logo" />
         <div>{brand.nama}</div>
         {brand.jargon && (
           <div>

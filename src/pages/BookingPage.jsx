@@ -27,23 +27,19 @@ export default function BookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [doneBooking, setDoneBooking] = useState(null);
 
-  // Daftar slot waktu 10:00 sampai 20:30 per 30 menit
   const timeSlots = useMemo(() => {
-    const arr = [];
-    for (let h = 10; h <= 20; h++) {
-      for (let m = 0; m < 60; m += 30) {
-        if (h === 20 && m > 30) break;
-        arr.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-      }
-    }
-    return arr;
-  }, []);
+    const toMin = (value) => { const [h, m] = String(value).split(':').map(Number); return h * 60 + m; };
+    const open = toMin(brand.jamBuka);
+    const last = Math.min(toMin(brand.batasReservasiTerakhir), toMin(brand.jamTutup) - 60);
+    return Array.from({ length: Math.max(0, Math.floor((last - open) / 30) + 1) }, (_, i) => {
+      const min = open + i * 30;
+      return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+    });
+  }, [brand.jamBuka, brand.jamTutup, brand.batasReservasiTerakhir]);
 
-  // Cek apakah slot minimal 3 jam dari waktu sekarang (WIB)
   const isSlotAllowed = (tglStr, jamStr) => {
     if (!tglStr || !jamStr) return false;
-    const slotTs = new Date(`${tglStr}T${jamStr}:00+07:00`).getTime();
-    return slotTs >= Date.now() + 3 * 3600000;
+    return new Date(`${tglStr}T${jamStr}:00+07:00`).getTime() >= Date.now() + 60 * 60000;
   };
 
   // Cek bentrok capster (selisih < 30 menit di tanggal yang sama)
@@ -101,7 +97,7 @@ export default function BookingPage() {
       return setErrorMsg('Pilih tanggal dan jam layanan.');
     }
     if (!isSlotAllowed(tanggal, jam)) {
-      return setErrorMsg('Waktu sudah lewat batas booking (minimal 3 jam sebelum layanan).');
+      return setErrorMsg('Waktu layanan harus minimal 60 menit dari sekarang.');
     }
     if (!kapId) {
       return setErrorMsg('Pilih capster terlebih dahulu.');
@@ -117,12 +113,12 @@ export default function BookingPage() {
     setSubmitting(true);
     try {
       const { data, error } = await supabase.rpc('buat_booking', {
-        svcIds: selectedSvcIds,
-        tanggal,
-        jam,
-        kapId,
-        nama: nama.trim(),
-        wa: cleanWa,
+        p_svc_ids: selectedSvcIds,
+        p_tanggal: tanggal,
+        p_jam: jam,
+        p_kap_id: kapId,
+        p_nama: nama.trim(),
+        p_wa: cleanWa,
       });
       if (error) throw error;
       setDoneBooking(data);
@@ -148,7 +144,7 @@ export default function BookingPage() {
   return (
     <div className="wrap">
       <div className="hb">
-        <img className="hl" src={brand.logoSm} alt={brand.nama} />
+        <img className="hl" src="/logo.jpeg" alt={brand.nama} />
         <div className="hr">
           <button className="ghost" onClick={() => setView('login')}>
             Login Staf
@@ -353,7 +349,7 @@ export default function BookingPage() {
       )}
 
       <div className="card prof" id="kontak">
-        <img className="logo" src={brand.logo} alt={brand.nama} />
+        <img className="logo" src="/logo.jpeg" alt={brand.nama} />
         <h2 className="pn">{brand.nama}</h2>
         {brand.jargon && <p className="tagl">{brand.jargon}</p>}
         <div className="cl">

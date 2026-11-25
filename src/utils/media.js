@@ -87,18 +87,6 @@ export async function processSquareAvatar(file, size = 240, quality = 0.8) {
   return c.toDataURL('image/jpeg', quality);
 }
 
-export async function processLogoUpload(file) {
-  const im = await readImageFile(file);
-  const m = Math.min(im.width, im.height);
-  const c = document.createElement('canvas');
-  c.width = c.height = 256;
-  c.getContext('2d').drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, 256, 256);
-  return {
-    logo: c.toDataURL('image/jpeg', 0.85),
-    logoBw: toBW(c, 200, 200, false, true),
-  };
-}
-
 export async function processNotaImage(file) {
   const im = await readImageFile(file);
   let w = 384;
@@ -107,7 +95,7 @@ export async function processNotaImage(file) {
     h = 420;
     w = Math.round((im.width * h) / im.height);
   }
-  return toBW(im, w, h, true, false);
+  return toBW(im, w, h, false, false);
 }
 
 export function playBeep() {

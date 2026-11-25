@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase, isConfigured } from '../lib/supabase';
 import { ld, normWa } from '../utils/format';
-import { hexRgb, shade, playBeep } from '../utils/media';
-import { LOGO_BIG, LOGO_SMALL, LOGO_BW, DEF_POL, DEF_KONTAK } from '../utils/defaults';
+import { playBeep } from '../utils/media';
+import { DEF_POL, DEF_KONTAK, DEFAULT_JAM_BUKA, DEFAULT_JAM_TUTUP, DEFAULT_BATAS_RESERVASI_TERAKHIR } from '../utils/defaults';
 
 const AppContext = createContext(null);
 
@@ -25,7 +25,6 @@ export function AppProvider({ children }) {
 
   const [ready, setReady] = useState(false);
   const [newBkCount, setNewBkCount] = useState(0);
-  const [previewTheme, setPreviewTheme] = useState(null);
 
   const seenBkIds = useRef(null);
   const autoClosedIds = useRef(new Set());
@@ -37,18 +36,23 @@ export function AppProvider({ children }) {
       supabase.from('services').select('*').order('created_at', { ascending: true }),
       supabase.from('public_capsters').select('*').order('name', { ascending: true }),
       supabase.from('public_booked_slots').select('*'),
-      supabase.from('settings').select('*'),
+      supabase.from('public_booking_settings').select('*').maybeSingle(),
     ]);
 
     if (svcRes.data) setServices(svcRes.data);
     if (capRes.data) setCapsters(capRes.data);
     if (slotRes.data) setBookedSlots(slotRes.data);
     if (setRes.data) {
-      const map = {};
-      setRes.data.forEach((r) => {
-        map[r.id] = r.data;
-      });
-      setSettings(map);
+      setSettings((prev) => ({
+        ...prev,
+        operasional: {
+          jam_buka: setRes.data.jam_buka,
+          jam_tutup: setRes.data.jam_tutup,
+          batas_reservasi_terakhir: setRes.data.batas_reservasi_terakhir,
+        },
+        kontak: setRes.data.kontak || prev.kontak,
+        utama: { ...(prev.utama || {}), pol: Array.isArray(setRes.data.booking_policy) ? setRes.data.booking_policy.join('\\n') : prev.utama?.pol },
+      }));
     }
   }, []);
 
@@ -166,13 +170,10 @@ export function AppProvider({ children }) {
     return {
       nama: d.nama || 'Rove Barbershop',
       jargon: d.jargon == null ? 'Grooming Space in the Town' : d.jargon,
-      logo: d.logo || LOGO_BIG,
-      logoSm: d.logo || LOGO_SMALL,
-      logoBw: d.logoBw || LOGO_BW,
-      bg: d.bg || '#05070f',
-      ol: d.ol || '#1b3bb5',
-      tx: d.tx || '#ffffff',
       pol: d.pol == null ? DEF_POL.join('\n') : d.pol,
+      jamBuka: settings.operasional?.jam_buka || DEFAULT_JAM_BUKA,
+      jamTutup: settings.operasional?.jam_tutup || DEFAULT_JAM_TUTUP,
+      batasReservasiTerakhir: settings.operasional?.batas_reservasi_terakhir || DEFAULT_BATAS_RESERVASI_TERAKHIR,
     };
   })();
 
@@ -205,16 +206,9 @@ export function AppProvider({ children }) {
 
   const notaConfig = settings.nota || {};
 
-  // Terapkan tema warna dinamis ke document
   useEffect(() => {
-    const activeTheme = previewTheme && tab === 'pengaturan' && me ? { ...brand, ...previewTheme } : brand;
-    const r = document.documentElement.style;
-    r.setProperty('--tx', activeTheme.tx);
-    r.setProperty('--bd', activeTheme.ol);
-    r.setProperty('--mu', `rgba(${hexRgb(activeTheme.tx).join(',')}, .62)`);
-    document.body.style.background = `radial-gradient(120% 60% at 50% 0%, ${shade(activeTheme.bg, 28)} 0%, ${activeTheme.bg} 45%, ${shade(activeTheme.bg, -14)} 100%) fixed`;
     document.title = brand.nama;
-  }, [brand, previewTheme, tab, me]);
+  }, [brand.nama]);
 
   // Auto-close shift pukul 23:59 WIB
   useEffect(() => {
@@ -295,8 +289,6 @@ export function AppProvider({ children }) {
         brand,
         kontak,
         notaConfig,
-        previewTheme,
-        setPreviewTheme,
         newBkCount,
         setNewBkCount,
         shiftToday,

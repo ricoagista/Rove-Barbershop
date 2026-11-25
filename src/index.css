@@ -2,13 +2,13 @@
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  --bg: #05070f;
-  --card: rgba(40, 80, 200, 0.07);
-  --tx: #ffffff;
-  --mu: #9aa3b8;
-  --ac: #a5b8ff;
-  --act: #0a1233;
-  --bd: #1b3bb5;
+  --bg: #121212;
+  --card: #1e1e1e;
+  --tx: #f4efe6;
+  --mu: #a8a196;
+  --ac: #c29b5a;
+  --act: #332a1b;
+  --bd: #2e2e2e;
   --bad: #ff9a92;
   color-scheme: dark;
 }
@@ -25,7 +25,7 @@ html {
 body {
   margin: 0;
   min-height: 100%;
-  background: radial-gradient(120% 60% at 50% 0%, #0f1d4d 0%, #0b1330 35%, #05070f 100%) fixed;
+  background: var(--bg);
   color: var(--tx);
   font: 16px/1.4 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
