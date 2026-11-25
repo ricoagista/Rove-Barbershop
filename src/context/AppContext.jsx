@@ -36,18 +36,23 @@ export function AppProvider({ children }) {
       supabase.from('services').select('*').order('created_at', { ascending: true }),
       supabase.from('public_capsters').select('*').order('name', { ascending: true }),
       supabase.from('public_booked_slots').select('*'),
-      supabase.from('settings').select('*'),
+      supabase.from('public_booking_settings').select('*').maybeSingle(),
     ]);
 
     if (svcRes.data) setServices(svcRes.data);
     if (capRes.data) setCapsters(capRes.data);
     if (slotRes.data) setBookedSlots(slotRes.data);
     if (setRes.data) {
-      const map = {};
-      setRes.data.forEach((r) => {
-        map[r.id] = r.data;
-      });
-      setSettings(map);
+      setSettings((prev) => ({
+        ...prev,
+        operasional: {
+          jam_buka: setRes.data.jam_buka,
+          jam_tutup: setRes.data.jam_tutup,
+          batas_reservasi_terakhir: setRes.data.batas_reservasi_terakhir,
+        },
+        kontak: setRes.data.kontak || prev.kontak,
+        utama: { ...(prev.utama || {}), pol: Array.isArray(setRes.data.booking_policy) ? setRes.data.booking_policy.join('\\n') : prev.utama?.pol },
+      }));
     }
   }, []);
 
