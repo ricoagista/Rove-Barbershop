@@ -82,12 +82,6 @@ export default function TopBar({ onSelectTab }) {
         <img src="/logo.jpeg" alt="Logo" />
         <div className="t">
           <b>{brand.nama}</b>
-          {brand.jargon && (
-            <>
-              <span>{brand.jargon}</span>
-              <br />
-            </>
-          )}
           <span>
             {me.name} · {roleName(me.role)}
           </span>

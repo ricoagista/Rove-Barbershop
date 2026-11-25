@@ -156,7 +156,6 @@ export default function BookingPage() {
       </div>
 
       <h1 className="ht">Book Your Session Now</h1>
-      {brand.jargon && <p className="sub">{brand.jargon}</p>}
 
       {!ready ? (
         <div className="card">
@@ -350,6 +349,7 @@ export default function BookingPage() {
 
       <div className="card prof" id="kontak">
         <img className="logo" src="/logo.jpeg" alt={brand.nama} />
+        <h2 className="pn">{brand.nama}</h2>
         <div className="cl">
           {kontak.wa && (
             <a className="ci" href={`https://wa.me/${kontak.wa}`} target="_blank" rel="noreferrer">
