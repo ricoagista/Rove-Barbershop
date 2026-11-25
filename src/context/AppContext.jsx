@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { supabase, isConfigured } from '../lib/supabase';
 import { ld, normWa } from '../utils/format';
-import { hexRgb, shade, playBeep } from '../utils/media';
+import { playBeep } from '../utils/media';
 import { DEF_POL, DEF_KONTAK } from '../utils/defaults';
 
 const AppContext = createContext(null);
@@ -201,16 +201,9 @@ export function AppProvider({ children }) {
 
   const notaConfig = settings.nota || {};
 
-  // Terapkan tema warna dinamis ke document
   useEffect(() => {
-    const activeTheme = previewTheme && tab === 'pengaturan' && me ? { ...brand, ...previewTheme } : brand;
-    const r = document.documentElement.style;
-    r.setProperty('--tx', activeTheme.tx);
-    r.setProperty('--bd', activeTheme.ol);
-    r.setProperty('--mu', `rgba(${hexRgb(activeTheme.tx).join(',')}, .62)`);
-    document.body.style.background = `radial-gradient(120% 60% at 50% 0%, ${shade(activeTheme.bg, 28)} 0%, ${activeTheme.bg} 45%, ${shade(activeTheme.bg, -14)} 100%) fixed`;
     document.title = brand.nama;
-  }, [brand, previewTheme, tab, me]);
+  }, [brand.nama]);
 
   // Auto-close shift pukul 23:59 WIB
   useEffect(() => {
@@ -291,8 +284,6 @@ export function AppProvider({ children }) {
         brand,
         kontak,
         notaConfig,
-        previewTheme,
-        setPreviewTheme,
         newBkCount,
         setNewBkCount,
         shiftToday,
