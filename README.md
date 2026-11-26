@@ -47,3 +47,11 @@ Jalankan berurutan di staging/produksi oleh operator database, bukan dari fronte
 Rollback: pulihkan backup untuk rollback penuh. Untuk rollback transisi, kembalikan frontend lama sebelum mencabut akses publik; jangan mencabut objek baru yang mungkin sudah dipakai frontend baru tanpa rencana SQL terbalik dan pengujian staging.
 
 Selama transisi, frontend lama harus tetap membaca `settings` sampai SQL pencabutan akses publik dijalankan. Frontend baru membaca `public_booking_settings`.
+
+### Catatan praktis
+
+- `migration.sql` hanya untuk setup database baru dari awal. Jangan jalankan ulang pada database existing.
+- `migration_reservation_operations.sql` adalah migrasi operasi yang saat ini dipakai untuk database baru maupun existing yang belum memiliki fitur operasi terbaru.
+- Jika aplikasi sudah berjalan dan ada fitur database baru setelah migrasi operasi pernah dijalankan, buat file migrasi baru, misalnya `supabase/migration_2026_11_nama_fitur.sql`. Jalankan hanya file baru tersebut, jangan menimpa atau mengulang file migrasi lama.
+- `revoke_public_settings.sql` bukan migrasi fitur. Jalankan hanya satu kali pada tahap public setelah frontend baru live dan `public_booking_settings` sudah diuji.
+- Semua SQL dijalankan oleh operator di staging terlebih dahulu, bukan dari frontend atau agent.
