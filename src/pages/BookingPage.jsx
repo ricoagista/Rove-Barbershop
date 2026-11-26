@@ -296,7 +296,7 @@ export default function BookingPage() {
             <input
               type="text"
               maxLength={60}
-              placeholder="Contoh: Budi Santoso"
+              placeholder="Contoh: Jhon Doe"
               value={nama}
               onChange={(e) => setNama(e.target.value)}
             />
