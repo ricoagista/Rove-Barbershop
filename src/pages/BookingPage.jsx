@@ -267,6 +267,7 @@ export default function BookingPage() {
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', marginTop: 6 }}>
               {timeSlots.map((slot) => {
                 const allowed = isSlotAllowed(tanggal, slot);
+                const full = isSlotFull(tanggal, slot);
                 return (
                   <button
                     type="button"
