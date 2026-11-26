@@ -18,8 +18,8 @@ export default function BookingPage() {
   const today = ld();
   const [selectedSvcIds, setSelectedSvcIds] = useState([]);
   const [tanggal, setTanggal] = useState(() => {
-    const saved = window.sessionStorage.getItem('rove-booking-date');
-    return /^\d{4}-\d{2}-\d{2}$/.test(saved || '') && saved >= today ? saved : today;
+    const saved = window.sessionStorage.getItem('rove.booking.date');
+    return saved && /^\d{4}-\d{2}-\d{2}$/.test(saved) && saved >= today ? saved : today;
   });
   const [jam, setJam] = useState('');
   const [kapId, setKapId] = useState('');
@@ -48,8 +48,15 @@ export default function BookingPage() {
   // Cek bentrok capster (selisih < 30 menit di tanggal yang sama)
   const isCapsterBusy = (capsterId, tglStr, jamStr) => {
     if (!capsterId || !tglStr || !jamStr) return false;
+    const [hh, mm] = jamStr.split(':').map(Number);
+    const targetMin = hh * 60 + mm;
     const target = bookedSlots.filter((b) => b.tanggal === tglStr && b.jam === jamStr);
-    return target.some((b) => b.sumber === 'ditutup' && (b.kap_id === null || b.kap_id === capsterId)) || target.some((b) => b.sumber !== 'ditutup' && b.kap_id === capsterId && Math.abs(Number(b.jam.slice(0, 2)) * 60 + Number(b.jam.slice(3)) - (Number(jamStr.slice(0, 2)) * 60 + Number(jamStr.slice(3))) < 30));
+    return target.some((b) => b.sumber === 'ditutup' && (b.kap_id === null || b.kap_id === capsterId)) || target.some((b) => {
+      if (b.sumber === 'ditutup' || b.kap_id !== capsterId || typeof b.jam !== 'string') return false;
+      const [bookedHour, bookedMinute] = b.jam.split(':').map(Number);
+      if (!Number.isFinite(bookedHour) || !Number.isFinite(bookedMinute)) return false;
+      return Math.abs(bookedHour * 60 + bookedMinute - targetMin) < 30;
+    });
   };
 
   const isSlotFull = (tglStr, jamStr) => capsters.length > 0 && capsters.every((c) => isCapsterBusy(c.id, tglStr, jamStr));
@@ -64,7 +71,7 @@ export default function BookingPage() {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return;
     const cleanDate = val < today ? today : val;
     setTanggal(cleanDate);
-    window.sessionStorage.setItem('rove-booking-date', cleanDate);
+    window.sessionStorage.setItem('rove.booking.date', cleanDate);
     if (jam && !isSlotAllowed(cleanDate, jam)) {
       setJam('');
       setKapId('');
@@ -133,7 +140,7 @@ export default function BookingPage() {
     setDoneBooking(null);
     setSelectedSvcIds([]);
     setTanggal(today);
-    window.sessionStorage.removeItem('rove-booking-date');
+    window.sessionStorage.removeItem('rove.booking.date');
     setJam('');
     setKapId('');
     setNama('');
