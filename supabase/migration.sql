@@ -1,5 +1,5 @@
 -- ROVE BARBERSHOP - Skema Database Relasional (PostgreSQL / Supabase)
--- Instalasi baru: jalankan file ini, lalu migration_reservation_operations.sql dan migration_reservation_fixes.sql.
+-- Instalasi baru: jalankan file ini, lalu migration_reservation_operations.sql.
 -- Jalankan seluruh isi file ini di Supabase > SQL Editor > New Query > Run
 
 -- 1. TABEL UTAMA

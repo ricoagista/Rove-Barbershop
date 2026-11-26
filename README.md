@@ -26,12 +26,23 @@ Logo toko berada di `public/logo.jpeg`. Ikon PWA tidak diubah. Halaman booking b
 
 Jalankan berurutan di staging/produksi oleh operator database, bukan dari frontend. Untuk database existing, jangan jalankan ulang `migration.sql`; jalankan hanya file migrasi tambahan yang belum pernah dijalankan:
 
-1. Backup database.
-2. Jalankan `supabase/migration_reservation_operations.sql`.
-3. Jalankan `supabase/migration_reservation_fixes.sql`.
+### Instalasi baru
+
+1. Backup database jika diperlukan.
+2. Jalankan `supabase/migration.sql`.
+3. Jalankan `supabase/migration_reservation_operations.sql`.
 4. Deploy frontend baru.
-5. Setelah view publik teruji, jalankan `supabase/revoke_public_settings.sql`.
-6. Untuk instalasi baru, jalankan `supabase/migration.sql`, lalu migration operasi, lalu migration fixes.
+5. Uji staging.
+6. Jalankan `supabase/revoke_public_settings.sql` paling terakhir.
+
+### Database existing
+
+1. Backup database.
+2. Jangan jalankan ulang `supabase/migration.sql`.
+3. Jalankan `supabase/migration_reservation_operations.sql` versi terbaru.
+4. Deploy frontend baru.
+5. Uji staging.
+6. Jalankan `supabase/revoke_public_settings.sql` paling terakhir.
 
 Rollback: pulihkan backup untuk rollback penuh. Untuk rollback transisi, kembalikan frontend lama sebelum mencabut akses publik; jangan mencabut objek baru yang mungkin sudah dipakai frontend baru tanpa rencana SQL terbalik dan pengujian staging.
 
