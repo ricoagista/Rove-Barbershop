@@ -1,5 +1,8 @@
 -- Idempotent fixes. Run after migration_reservation_operations.sql, never from the app.
-create or replace view public.public_booking_settings as
+-- PostgreSQL cannot replace a view while removing/changing a column; this view is
+-- intentionally dropped and recreated because booking_policy changes from jsonb to text.
+drop view if exists public.public_booking_settings;
+create view public.public_booking_settings as
 select
   coalesce((select data->>'jam_buka' from public.settings where id='operasional'),'13:00') as jam_buka,
   coalesce((select data->>'jam_tutup' from public.settings where id='operasional'),'21:00') as jam_tutup,
