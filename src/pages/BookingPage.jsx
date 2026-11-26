@@ -44,14 +44,11 @@ export default function BookingPage() {
   // Cek bentrok capster (selisih < 30 menit di tanggal yang sama)
   const isCapsterBusy = (capsterId, tglStr, jamStr) => {
     if (!capsterId || !tglStr || !jamStr) return false;
-    const [hh, mm] = jamStr.split(':').map(Number);
-    const targetMin = hh * 60 + mm;
-    return bookedSlots.some((b) => {
-      if (b.kap_id !== capsterId || b.tanggal !== tglStr) return false;
-      const [bh, bm] = String(b.jam || '00:00').split(':').map(Number);
-      return Math.abs(bh * 60 + bm - targetMin) < 30;
-    });
+    const target = bookedSlots.filter((b) => b.tanggal === tglStr && b.jam === jamStr);
+    return target.some((b) => b.sumber === 'ditutup' && (b.kap_id === null || b.kap_id === capsterId)) || target.some((b) => b.sumber !== 'ditutup' && b.kap_id === capsterId && Math.abs(Number(b.jam.slice(0, 2)) * 60 + Number(b.jam.slice(3)) - (Number(jamStr.slice(0, 2)) * 60 + Number(jamStr.slice(3))) < 30));
   };
+
+  const isSlotFull = (tglStr, jamStr) => capsters.length > 0 && capsters.every((c) => isCapsterBusy(c.id, tglStr, jamStr));
 
   const toggleService = (id) => {
     setSelectedSvcIds((prev) =>
@@ -77,10 +74,7 @@ export default function BookingPage() {
 
   const selectedServices = services.filter((s) => selectedSvcIds.includes(s.id));
   const totalHarga = selectedServices.reduce((sum, s) => sum + s.harga, 0);
-  const policyLines = brand.pol
-    .split('\n')
-    .map((x) => x.trim())
-    .filter(Boolean);
+  const policyLines = String(brand.pol || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -251,7 +245,7 @@ export default function BookingPage() {
                     disabled={!allowed}
                     onClick={() => handleSelectTime(slot)}
                   >
-                    {slot}
+                    {isSlotFull(tanggal, slot) ? 'Penuh' : slot}
                   </button>
                 );
               })}

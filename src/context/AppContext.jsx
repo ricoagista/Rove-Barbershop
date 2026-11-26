@@ -50,7 +50,7 @@ export function AppProvider({ children }) {
           jam_tutup: setRes.data.jam_tutup,
           batas_reservasi_terakhir: setRes.data.batas_reservasi_terakhir,
         },
-        utama: { ...(prev.utama || {}), pol: setRes.data.booking_policy || prev.utama?.pol },
+        utama: { ...(prev.utama || {}), pol: setRes.data.booking_policy || prev.utama?.pol || DEF_POL.join('\n') },
       }));
     }
   }, []);

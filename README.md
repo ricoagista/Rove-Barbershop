@@ -27,9 +27,10 @@ Jalankan berurutan di staging/produksi oleh operator database, bukan dari fronte
 
 1. Backup database.
 2. Jalankan `supabase/migration_reservation_operations.sql`.
-3. Deploy frontend baru.
-4. Setelah view publik teruji, jalankan `supabase/revoke_public_settings.sql`.
-5. Untuk instalasi baru, gunakan `supabase/migration.sql` lalu migrasi operasi.
+3. Jalankan `supabase/migration_reservation_fixes.sql`.
+4. Deploy frontend baru.
+5. Setelah view publik teruji, jalankan `supabase/revoke_public_settings.sql`.
+6. Untuk instalasi baru, jalankan `supabase/migration.sql`, lalu migration operasi, lalu migration fixes.
 
 Rollback: pulihkan backup untuk rollback penuh. Untuk rollback transisi, kembalikan frontend lama sebelum mencabut akses publik; jangan mencabut objek baru yang mungkin sudah dipakai frontend baru tanpa rencana SQL terbalik dan pengujian staging.
 

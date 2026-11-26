@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
-import { rp, dstr, normWa } from '../utils/format';
+import { rp, normWa } from '../utils/format';
 import { KATS } from '../utils/defaults';
 import Receipt58mm from '../components/Receipt58mm';
 
@@ -168,14 +168,6 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     setSaving(true);
     try {
       const now = new Date();
-      const todayWib = dstr(now);
-      const countToday = sales.filter((s) => dstr(s.ts) === todayWib).length + 1;
-      const wibDate = new Date(now.getTime() + 7 * 3600000);
-      const yy = String(wibDate.getUTCFullYear()).slice(2);
-      const mm = String(wibDate.getUTCMonth() + 1).padStart(2, '0');
-      const dd = String(wibDate.getUTCDate()).padStart(2, '0');
-      const nomor = `RV-${yy}${mm}${dd}-${String(countToday).padStart(3, '0')}`;
-
       const itemsPayload = cartEntries.map(({ svc, qty }) => ({
         nama: svc.nama,
         harga: svc.harga,
@@ -184,7 +176,6 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       }));
 
       const payload = {
-        nomor,
         ts: now.toISOString(),
         kasir_id: me.id,
         kasir_nama: me.name,
@@ -204,12 +195,8 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         kembali: metode === 'Tunai' ? bayarNum - total : 0,
       };
 
-      const { data, error } = await supabase.from('sales').insert(payload).select().single();
+      const { data, error } = await supabase.rpc('buat_penjualan', { p_payload: payload });
       if (error) throw error;
-
-      if (payload.booking_id) {
-        await supabase.from('bookings').update({ status: 'Selesai' }).eq('id', payload.booking_id);
-      }
 
       setLocalReceipt(data || payload);
       setCart({});
