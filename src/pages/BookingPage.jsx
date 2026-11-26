@@ -3,6 +3,25 @@ import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import { rp, ld, normWa } from '../utils/format';
 
+const BOOKING_DATE_KEY = 'rove.booking.date';
+
+function readBookingDate(today) {
+  try {
+    const saved = window.sessionStorage.getItem(BOOKING_DATE_KEY);
+    return saved && /^\d{4}-\d{2}-\d{2}$/.test(saved) && saved >= today ? saved : today;
+  } catch {
+    return today;
+  }
+}
+
+function writeBookingDate(value) {
+  try { window.sessionStorage.setItem(BOOKING_DATE_KEY, value); } catch { /* storage unavailable */ }
+}
+
+function clearBookingDate() {
+  try { window.sessionStorage.removeItem(BOOKING_DATE_KEY); } catch { /* storage unavailable */ }
+}
+
 export default function BookingPage() {
   const {
     isConfigured,
@@ -17,10 +36,7 @@ export default function BookingPage() {
 
   const today = ld();
   const [selectedSvcIds, setSelectedSvcIds] = useState([]);
-  const [tanggal, setTanggal] = useState(() => {
-    const saved = window.sessionStorage.getItem('rove.booking.date');
-    return saved && /^\d{4}-\d{2}-\d{2}$/.test(saved) && saved >= today ? saved : today;
-  });
+  const [tanggal, setTanggal] = useState(() => readBookingDate(today));
   const [jam, setJam] = useState('');
   const [kapId, setKapId] = useState('');
   const [nama, setNama] = useState('');
@@ -71,7 +87,7 @@ export default function BookingPage() {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return;
     const cleanDate = val < today ? today : val;
     setTanggal(cleanDate);
-    window.sessionStorage.setItem('rove.booking.date', cleanDate);
+    writeBookingDate(cleanDate);
     if (jam && !isSlotAllowed(cleanDate, jam)) {
       setJam('');
       setKapId('');
@@ -140,7 +156,7 @@ export default function BookingPage() {
     setDoneBooking(null);
     setSelectedSvcIds([]);
     setTanggal(today);
-    window.sessionStorage.removeItem('rove.booking.date');
+    clearBookingDate();
     setJam('');
     setKapId('');
     setNama('');
