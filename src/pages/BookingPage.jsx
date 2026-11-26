@@ -242,7 +242,7 @@ export default function BookingPage() {
                     type="button"
                     key={slot}
                     className={jam === slot ? 'on' : ''}
-                    disabled={!allowed}
+                    disabled={!allowed || full}
                     onClick={() => handleSelectTime(slot)}
                   >
                     {isSlotFull(tanggal, slot) ? 'Penuh' : slot}
@@ -327,3 +327,4 @@ export default function BookingPage() {
     </div>
   );
 }
+
