@@ -1,14 +1,32 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
-import { rp, ld, normWa, fmtPhone } from '../utils/format';
+import { rp, ld, normWa } from '../utils/format';
+
+const BOOKING_DATE_KEY = 'rove.booking.date';
+
+function readBookingDate(today) {
+  try {
+    const saved = window.sessionStorage.getItem(BOOKING_DATE_KEY);
+    return saved && /^\d{4}-\d{2}-\d{2}$/.test(saved) && saved >= today ? saved : today;
+  } catch {
+    return today;
+  }
+}
+
+function writeBookingDate(value) {
+  try { window.sessionStorage.setItem(BOOKING_DATE_KEY, value); } catch { /* storage unavailable */ }
+}
+
+function clearBookingDate() {
+  try { window.sessionStorage.removeItem(BOOKING_DATE_KEY); } catch { /* storage unavailable */ }
+}
 
 export default function BookingPage() {
   const {
     isConfigured,
     ready,
     brand,
-    kontak,
     services,
     capsters,
     bookedSlots,
@@ -18,7 +36,7 @@ export default function BookingPage() {
 
   const today = ld();
   const [selectedSvcIds, setSelectedSvcIds] = useState([]);
-  const [tanggal, setTanggal] = useState(today);
+  const [tanggal, setTanggal] = useState(() => readBookingDate(today));
   const [jam, setJam] = useState('');
   const [kapId, setKapId] = useState('');
   const [nama, setNama] = useState('');
@@ -39,7 +57,8 @@ export default function BookingPage() {
 
   const isSlotAllowed = (tglStr, jamStr) => {
     if (!tglStr || !jamStr) return false;
-    return new Date(`${tglStr}T${jamStr}:00+07:00`).getTime() >= Date.now() + 60 * 60000;
+    const serviceTs = new Date(`${tglStr}T${jamStr}:00+07:00`).getTime();
+    return Number.isFinite(serviceTs) && serviceTs >= Date.now() + 60 * 60000;
   };
 
   // Cek bentrok capster (selisih < 30 menit di tanggal yang sama)
@@ -47,12 +66,16 @@ export default function BookingPage() {
     if (!capsterId || !tglStr || !jamStr) return false;
     const [hh, mm] = jamStr.split(':').map(Number);
     const targetMin = hh * 60 + mm;
-    return bookedSlots.some((b) => {
-      if (b.kap_id !== capsterId || b.tanggal !== tglStr) return false;
-      const [bh, bm] = String(b.jam || '00:00').split(':').map(Number);
-      return Math.abs(bh * 60 + bm - targetMin) < 30;
+    const target = bookedSlots.filter((b) => b.tanggal === tglStr && b.jam === jamStr);
+    return target.some((b) => b.sumber === 'ditutup' && (b.kap_id === null || b.kap_id === capsterId)) || target.some((b) => {
+      if (b.sumber === 'ditutup' || b.kap_id !== capsterId || typeof b.jam !== 'string') return false;
+      const [bookedHour, bookedMinute] = b.jam.split(':').map(Number);
+      if (!Number.isFinite(bookedHour) || !Number.isFinite(bookedMinute)) return false;
+      return Math.abs(bookedHour * 60 + bookedMinute - targetMin) < 30;
     });
   };
+
+  const isSlotFull = (tglStr, jamStr) => capsters.length > 0 && capsters.every((c) => isCapsterBusy(c.id, tglStr, jamStr));
 
   const toggleService = (id) => {
     setSelectedSvcIds((prev) =>
@@ -61,8 +84,10 @@ export default function BookingPage() {
   };
 
   const handleDateChange = (val) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return;
     const cleanDate = val < today ? today : val;
     setTanggal(cleanDate);
+    writeBookingDate(cleanDate);
     if (jam && !isSlotAllowed(cleanDate, jam)) {
       setJam('');
       setKapId('');
@@ -78,10 +103,7 @@ export default function BookingPage() {
 
   const selectedServices = services.filter((s) => selectedSvcIds.includes(s.id));
   const totalHarga = selectedServices.reduce((sum, s) => sum + s.harga, 0);
-  const policyLines = brand.pol
-    .split('\n')
-    .map((x) => x.trim())
-    .filter(Boolean);
+  const policyLines = String(brand.pol || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,6 +156,7 @@ export default function BookingPage() {
     setDoneBooking(null);
     setSelectedSvcIds([]);
     setTanggal(today);
+    clearBookingDate();
     setJam('');
     setKapId('');
     setNama('');
@@ -149,9 +172,6 @@ export default function BookingPage() {
           <button className="ghost" onClick={() => setView('login')}>
             Login Staf
           </button>
-          <a className="cu" href="#kontak">
-            Contact Us
-          </a>
         </div>
       </div>
 
@@ -195,19 +215,6 @@ export default function BookingPage() {
             <b className="tot">{rp(doneBooking.harga)}</b>
           </div>
           <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-            {kontak.wa && (
-              <a
-                className="cu"
-                style={{ flex: 1, textAlign: 'center' }}
-                href={`https://wa.me/${kontak.wa}?text=${encodeURIComponent(
-                  `Halo ${brand.nama}, saya sudah booking dengan kode ${doneBooking.nomor} (${doneBooking.nama}) jadwal ${doneBooking.tanggal} jam ${doneBooking.jam} bersama ${doneBooking.kap_nama}.`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Konfirmasi via WA
-              </a>
-            )}
             <button type="button" onClick={resetForm}>
               Booking Lagi
             </button>
@@ -260,15 +267,16 @@ export default function BookingPage() {
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', marginTop: 6 }}>
               {timeSlots.map((slot) => {
                 const allowed = isSlotAllowed(tanggal, slot);
+                const full = isSlotFull(tanggal, slot);
                 return (
                   <button
                     type="button"
                     key={slot}
                     className={jam === slot ? 'on' : ''}
-                    disabled={!allowed}
+                    disabled={!allowed || full}
                     onClick={() => handleSelectTime(slot)}
                   >
-                    {slot}
+                    {isSlotFull(tanggal, slot) ? 'Penuh' : slot}
                   </button>
                 );
               })}
@@ -313,7 +321,7 @@ export default function BookingPage() {
             <input
               type="text"
               maxLength={60}
-              placeholder="Contoh: Budi Santoso"
+              placeholder="Contoh: Jhon Doe"
               value={nama}
               onChange={(e) => setNama(e.target.value)}
             />
@@ -338,7 +346,7 @@ export default function BookingPage() {
       )}
 
       {policyLines.length > 0 && (
-        <div className="card">
+        <div className="card policy-last">
           <h2>Booking Policy</h2>
           <ol className="pol">
             {policyLines.map((line, idx) => (
@@ -347,51 +355,7 @@ export default function BookingPage() {
           </ol>
         </div>
       )}
-
-      <div className="card prof" id="kontak">
-        <img className="logo" src="/logo.jpeg" alt={brand.nama} />
-        <h2 className="pn">{brand.nama}</h2>
-        {brand.jargon && <p className="tagl">{brand.jargon}</p>}
-        <div className="cl">
-          {kontak.wa && (
-            <a className="ci" href={`https://wa.me/${kontak.wa}`} target="_blank" rel="noreferrer">
-              <span>WhatsApp:</span>
-              <b>{fmtPhone(kontak.waShow)}</b>
-            </a>
-          )}
-          {kontak.ig && (
-            <a className="ci" href={kontak.ig} target="_blank" rel="noreferrer">
-              <span>Instagram:</span>
-              <b>@{kontak.igTxt}</b>
-            </a>
-          )}
-          {kontak.tt && (
-            <a className="ci" href={kontak.tt} target="_blank" rel="noreferrer">
-              <span>TikTok:</span>
-              <b>@{kontak.ttTxt}</b>
-            </a>
-          )}
-          {kontak.fb && (
-            <a className="ci" href={kontak.fb} target="_blank" rel="noreferrer">
-              <span>Facebook:</span>
-              <b>{kontak.fbTxt}</b>
-            </a>
-          )}
-          {kontak.maps && (
-            <a className="ci" href={kontak.maps} target="_blank" rel="noreferrer">
-              <span>Lokasi Google Maps</span>
-            </a>
-          )}
-        </div>
-        {kontak.email && (
-          <p style={{ marginTop: 12 }}>
-            Email:{' '}
-            <a className="em" href={`mailto:${kontak.email}`}>
-              {kontak.email}
-            </a>
-          </p>
-        )}
-      </div>
     </div>
   );
 }
+
