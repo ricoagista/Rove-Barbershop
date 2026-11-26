@@ -38,7 +38,8 @@ export default function BookingPage() {
 
   const isSlotAllowed = (tglStr, jamStr) => {
     if (!tglStr || !jamStr) return false;
-    return new Date(`${tglStr}T${jamStr}:00+07:00`).getTime() >= Date.now() + 60 * 60000;
+    const serviceTs = new Date(`${tglStr}T${jamStr}:00+07:00`).getTime();
+    return Number.isFinite(serviceTs) && serviceTs >= Date.now() + 60 * 60000;
   };
 
   // Cek bentrok capster (selisih < 30 menit di tanggal yang sama)
@@ -57,6 +58,7 @@ export default function BookingPage() {
   };
 
   const handleDateChange = (val) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return;
     const cleanDate = val < today ? today : val;
     setTanggal(cleanDate);
     if (jam && !isSlotAllowed(cleanDate, jam)) {
