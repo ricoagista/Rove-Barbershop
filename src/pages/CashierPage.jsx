@@ -163,7 +163,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         total,
         metode,
         pelanggan: custName.trim() || 'Regular',
-        wa: cleanWa || null,
+        wa: cleanWa || '',
         diterima: metode === 'Tunai' ? bayarNum : total,
         kembali: metode === 'Tunai' ? bayarNum - total : 0,
       };
