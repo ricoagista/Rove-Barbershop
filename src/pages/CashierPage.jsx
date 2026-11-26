@@ -154,7 +154,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         kasir_nama: me.name,
         capster_id: activeCap.id,
         capster_nama: activeCap.name,
-        jenis: ptype,
+        jenis: ptype === 'regular' ? 'baru' : 'reservasi',
         booking_id: ptype === 'reservasi' && bkId ? bkId : null,
         items: itemsPayload,
         subtotal,
