@@ -17,7 +17,10 @@ export default function BookingPage() {
 
   const today = ld();
   const [selectedSvcIds, setSelectedSvcIds] = useState([]);
-  const [tanggal, setTanggal] = useState(today);
+  const [tanggal, setTanggal] = useState(() => {
+    const saved = window.sessionStorage.getItem('rove-booking-date');
+    return /^\d{4}-\d{2}-\d{2}$/.test(saved || '') && saved >= today ? saved : today;
+  });
   const [jam, setJam] = useState('');
   const [kapId, setKapId] = useState('');
   const [nama, setNama] = useState('');
@@ -61,6 +64,7 @@ export default function BookingPage() {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return;
     const cleanDate = val < today ? today : val;
     setTanggal(cleanDate);
+    window.sessionStorage.setItem('rove-booking-date', cleanDate);
     if (jam && !isSlotAllowed(cleanDate, jam)) {
       setJam('');
       setKapId('');
@@ -129,6 +133,7 @@ export default function BookingPage() {
     setDoneBooking(null);
     setSelectedSvcIds([]);
     setTanggal(today);
+    window.sessionStorage.removeItem('rove-booking-date');
     setJam('');
     setKapId('');
     setNama('');
