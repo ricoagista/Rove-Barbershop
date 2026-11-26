@@ -11,7 +11,6 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     services,
     promos,
     bookings,
-    sales,
     capsters,
     isServiceOpen,
     refreshAll,
@@ -20,7 +19,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   const [cart, setCart] = useState({});
   const [promoId, setPromoId] = useState('');
   const [capsterId, setCapsterId] = useState('');
-  const [ptype, setPtype] = useState('baru'); // 'baru' | 'lama' | 'reservasi'
+  const [ptype, setPtype] = useState('regular'); // 'regular' | 'reservasi'
   const [bkId, setBkId] = useState('');
   const [custName, setCustName] = useState('');
   const [custWa, setCustWa] = useState('');
@@ -32,19 +31,6 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   const [localReceipt, setLocalReceipt] = useState(null);
 
   const activeReceipt = externalReceipt || localReceipt;
-
-  // Daftar pelanggan unik dari riwayat transaksi untuk opsi Pelanggan Lama
-  const pastCustomers = useMemo(() => {
-    const map = {};
-    [...sales]
-      .sort((a, b) => new Date(a.ts) - new Date(b.ts))
-      .forEach((s) => {
-        if (s.wa) {
-          map[s.wa] = { nama: s.pelanggan || '', wa: s.wa };
-        }
-      });
-    return Object.values(map).sort((a, b) => a.nama.localeCompare(b.nama));
-  }, [sales]);
 
   // Daftar reservasi aktif (Baru / Hadir)
   const activeBookings = useMemo(() => {
@@ -95,13 +81,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     setCustName('');
     setCustWa('');
     setBkId('');
+    setCart({});
+    setCapsterId('');
     setErr('');
-  };
-
-  const handlePickPastCustomer = (waVal) => {
-    const found = pastCustomers.find((c) => c.wa === waVal);
-    setCustName(found ? found.nama : '');
-    setCustWa(found ? found.wa : '');
   };
 
   const handlePickBooking = (id) => {
@@ -145,21 +127,12 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     if (!activeCap) {
       return setErr('Pilih capster yang melayani.');
     }
-    if (!custName.trim()) {
-      return setErr(
-        ptype === 'lama'
-          ? 'Pilih pelanggan terlebih dulu.'
-          : ptype === 'reservasi'
-          ? 'Pilih reservasi terlebih dulu.'
-          : 'Nama pelanggan wajib diisi.'
-      );
+    if (ptype === 'reservasi' && !bkId) {
+      return setErr('Pilih reservasi terlebih dulu.');
     }
-    if (!custWa.trim()) {
-      return setErr('Kontak WhatsApp wajib diisi.');
-    }
-    const cleanWa = normWa(custWa);
-    if (!cleanWa) {
-      return setErr('Nomor WhatsApp tidak valid. Contoh: 081234567890.');
+    const cleanWa = custWa.trim() ? normWa(custWa) : '';
+    if (ptype === 'reservasi' && !cleanWa) {
+      return setErr('Nomor WhatsApp reservasi tidak valid.');
     }
     if (metode === 'Tunai' && bayarNum < total) {
       return setErr('Uang diterima kurang dari total.');
@@ -189,8 +162,8 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         promo: diskon > 0 && selectedPromo ? selectedPromo.nama : '',
         total,
         metode,
-        pelanggan: custName.trim(),
-        wa: cleanWa,
+        pelanggan: custName.trim() || 'Regular',
+        wa: cleanWa || null,
         diterima: metode === 'Tunai' ? bayarNum : total,
         kembali: metode === 'Tunai' ? bayarNum - total : 0,
       };
@@ -204,7 +177,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       setCustName('');
       setCustWa('');
       setPromoId('');
-      setPtype('baru');
+      setPtype('regular');
       setBkId('');
       setCapsterId('');
       await refreshAll();
@@ -366,43 +339,20 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         <label>Jenis pelanggan *</label>
         <div className="two" style={{ marginBottom: 10 }}>
           <button
-            className={ptype === 'baru' ? 'on' : ''}
-            onClick={() => handleSelectPtype('baru')}
+            className={ptype === 'regular' ? 'on' : ''}
+            onClick={() => handleSelectPtype('regular')}
           >
-            Pelanggan baru
-          </button>
-          <button
-            className={ptype === 'lama' ? 'on' : ''}
-            onClick={() => handleSelectPtype('lama')}
-          >
-            Pelanggan lama
+            Regular
           </button>
           <button
             className={ptype === 'reservasi' ? 'on' : ''}
-            style={{ gridColumn: '1 / -1' }}
             onClick={() => handleSelectPtype('reservasi')}
           >
-            Pelanggan Reservasi
+            Reservasi
           </button>
         </div>
 
-        {ptype === 'lama' ? (
-          pastCustomers.length ? (
-            <>
-              <label>Pilih pelanggan *</label>
-              <select value={custWa} onChange={(e) => handlePickPastCustomer(e.target.value)}>
-                <option value="">Pilih pelanggan…</option>
-                {pastCustomers.map((c) => (
-                  <option key={c.wa} value={c.wa}>
-                    {c.nama} — {c.wa}
-                  </option>
-                ))}
-              </select>
-            </>
-          ) : (
-            <p className="mu">Belum ada pelanggan tersimpan. Gunakan Pelanggan baru dulu.</p>
-          )
-        ) : ptype === 'reservasi' ? (
+        {ptype === 'reservasi' ? (
           activeBookings.length ? (
             <>
               <label>Pilih reservasi *</label>
@@ -423,24 +373,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           ) : (
             <p className="mu">Belum ada reservasi aktif.</p>
           )
-        ) : (
-          <>
-            <label>Nama pelanggan *</label>
-            <input
-              value={custName}
-              onChange={(e) => setCustName(e.target.value)}
-              autoComplete="off"
-            />
-            <label>Kontak WhatsApp * (contoh 081234567890)</label>
-            <input
-              type="tel"
-              inputMode="tel"
-              value={custWa}
-              onChange={(e) => setCustWa(e.target.value)}
-              autoComplete="off"
-            />
-          </>
-        )}
+        ) : null}
 
         <label>Metode bayar *</label>
         <div className="two" style={{ marginBottom: 10 }}>
