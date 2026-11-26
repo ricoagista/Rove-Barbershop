@@ -26,7 +26,7 @@ begin
  foreach x in array p_svc_ids loop select id,nama,harga into r from services where id=x; if found then items:=items||jsonb_build_array(jsonb_build_object('id',r.id,'nama',r.nama,'harga',r.harga)); total:=total+r.harga; names:=names||case when names='' then '' else ', ' end||r.nama; end if; end loop;
  if names='' then raise exception 'Pilih minimal satu layanan.'; end if;
  perform pg_advisory_xact_lock(hashtext('rove_issue_date_'||(now_wib::date)::text));
- select count(*)+1 into n from bookings b0 where b0.tgl_buat=now_wib::date;
+ select coalesce(max(nullif(regexp_replace(b0.nomor, '^BK-[0-9]{6}-', '') , '')::int), 0) + 1 into n from bookings b0 where b0.tgl_buat=now_wib::date;
  insert into bookings(nomor,tgl_buat,items,svc_nama,harga,tanggal,jam,kap_id,kap_nama,nama,wa,status) select 'BK-'||to_char(now_wib,'YYMMDD')||'-'||lpad(n::text,3,'0'),now_wib::date,items,names,total,p_tanggal,p_jam,p_kap_id,name,trim(p_nama),regexp_replace(p_wa,'\D','','g'),'Baru' from profiles where id=p_kap_id returning * into outrow;
  return to_jsonb(outrow);
 end $$;
@@ -50,16 +50,19 @@ returns jsonb language plpgsql security definer set search_path=public as $$
 declare p jsonb:=p_payload; bid uuid; out_sale sales%rowtype; n int; today date:=(now() at time zone 'Asia/Jakarta')::date; status_now text;
 begin
  if not is_staff() then raise exception 'Hanya staf terdaftar yang boleh membuat penjualan.'; end if;
- if p->>'kasir_id' <> auth.uid()::text then raise exception 'Kasir tidak valid.'; end if;
+ p := jsonb_set(p, '{kasir_id}', to_jsonb(auth.uid()::text), true);
+ p := jsonb_set(p, '{kasir_nama}', to_jsonb((select name from profiles where id=auth.uid())), true);
+ if (select role from profiles where id=auth.uid()) = 'capster' and (p->>'capster_id') <> auth.uid()::text then raise exception 'Capster hanya dapat memilih dirinya sendiri.'; end if;
  bid:=nullif(p->>'booking_id','')::uuid;
  if bid is not null then select status into status_now from bookings where id=bid; if not found or status_now in ('Selesai','Batal') then raise exception 'Reservasi tidak ditemukan atau sudah selesai/batal.'; end if; end if;
  perform pg_advisory_xact_lock(hashtext('rove_issue_date_'||today::text));
- select count(*)+1 into n from sales where (ts at time zone 'Asia/Jakarta')::date=today;
+ select coalesce(max(nullif(regexp_replace(s.nomor, '^RV-[0-9]{6}-', ''), '')::int), 0) + 1 into n from sales s where (s.ts at time zone 'Asia/Jakarta')::date=today;
  insert into sales(nomor,ts,kasir_id,kasir_nama,capster_id,capster_nama,jenis,booking_id,items,subtotal,diskon,promo,total,metode,pelanggan,wa,diterima,kembali)
  values('RV-'||to_char(now() at time zone 'Asia/Jakarta','YYMMDD')||'-'||lpad(n::text,3,'0'),coalesce((p->>'ts')::timestamptz,now()),(p->>'kasir_id')::uuid,p->>'kasir_nama',(p->>'capster_id')::uuid,p->>'capster_nama',p->>'jenis',bid,p->'items',(p->>'subtotal')::int,(p->>'diskon')::int,coalesce(p->>'promo',''),(p->>'total')::int,p->>'metode',p->>'pelanggan',p->>'wa',(p->>'diterima')::int,(p->>'kembali')::int) returning * into out_sale;
  if bid is not null then update bookings set status='Selesai' where id=bid; end if;
  return to_jsonb(out_sale);
 end $$;
 revoke all on function public.buat_penjualan(jsonb) from public;
+drop policy if exists staff_insert_sales on sales;
 grant execute on function public.buat_penjualan(jsonb) to authenticated;
 notify pgrst,'reload schema';

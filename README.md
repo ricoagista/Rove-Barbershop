@@ -10,6 +10,7 @@ Aplikasi reservasi dan operasional Rove Barbershop.
 - Default jam buka 13:00, tutup 21:00, batas reservasi terakhir 19:00.
 - Slot dikunci per capster. Pelanggan melihat `Penuh` jika semua capster penuh atau ditutup.
 - Owner dan kasir dapat menutup slot untuk satu capster atau semua capster.
+- Capster tidak dapat menutup slot atau mengubah status reservasi.
 
 ## Pengembangan
 
@@ -23,7 +24,7 @@ Logo toko berada di `public/logo.jpeg`. Ikon PWA tidak diubah. Halaman booking b
 
 ## Migrasi database
 
-Jalankan berurutan di staging/produksi oleh operator database, bukan dari frontend:
+Jalankan berurutan di staging/produksi oleh operator database, bukan dari frontend. Untuk database existing, jangan jalankan ulang `migration.sql`; jalankan hanya file migrasi tambahan yang belum pernah dijalankan:
 
 1. Backup database.
 2. Jalankan `supabase/migration_reservation_operations.sql`.
