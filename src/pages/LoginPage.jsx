@@ -82,7 +82,7 @@ export default function LoginPage() {
           type="button"
           className="ghost"
           style={{ width: '100%', marginTop: 12 }}
-          onClick={() => setView('home')}
+          onClick={() => window.location.assign('/')}
         >
           ← Kembali ke Halaman Booking
         </button>
