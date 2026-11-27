@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import { rp, ld, normWa } from '../utils/format';
@@ -45,6 +45,12 @@ export default function BookingPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [doneBooking, setDoneBooking] = useState(null);
+
+  useEffect(() => {
+    if (peopleCount !== 1 || selectedSvcIds.length || !services.length) return;
+    const firstHairCut = services.filter((s) => s.kat === 'Hair Cut').sort((a, b) => String(a.id).localeCompare(String(b.id)))[0];
+    if (firstHairCut) setSelectedSvcIds([firstHairCut.id]);
+  }, [peopleCount, selectedSvcIds.length, services]);
 
   const timeSlots = useMemo(() => {
     const toMin = (value) => { const [h, m] = String(value).split(':').map(Number); return h * 60 + m; };
