@@ -242,12 +242,11 @@ export default function BookingPage() {
 
   return (
     <div className="wrap">
-      <div className="hb">
+      <header className="booking-hero">
         <img className="hl" src="/logo.jpeg" alt={brand.nama} />
-      </div>
-
-      <h1 className="ht">Book Your Session Now</h1>
-      {brand.jargon && <p className="sub">{brand.jargon}</p>}
+        <h1 className="ht">Book Your Session Now</h1>
+        {brand.jargon && <p className="sub">{brand.jargon}</p>}
+      </header>
 
       {!ready ? (
         <div className="card">

@@ -395,11 +395,27 @@ th, td {
 
 .sub {
   text-align: center;
-  color: var(--accent-text);
-  font-weight: 600;
-  margin: 0 0 14px;
+  color: var(--mu);
+  font-weight: 400;
+  margin: 0;
   font-size: 14px;
 }
+
+.booking-hero {
+  text-align: center;
+  margin: 4px 0 24px;
+}
+
+.booking-hero .hl {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+}
+
+.booking-hero .ht {
+  margin: 0;
+}
+
 
 .hb {
   display: flex;
