@@ -293,12 +293,6 @@ export default function BookingPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="card booking-summary">
-            <b>Ringkasan Booking</b>
-            <div className="mu">Layanan: {selectedMain.map((s) => s.nama).join(', ') || 'Belum dipilih'}</div>
-            {selectedExtras.length > 0 && <div className="mu">Extra: {selectedExtras.map((s) => s.nama).join(', ')}</div>}
-            <strong>{rp(totalHarga)}</strong>
-          </div>
           <div className="card">
             <h2>Jumlah Orang</h2>
             <p className="mu">Pilih jumlah orang yang akan datang.</p>
@@ -443,12 +437,14 @@ export default function BookingPage() {
               onChange={(e) => setWa(e.target.value)}
             />
             {errorMsg && <div className="err">{errorMsg}</div>}
-            <button
-              type="submit"
-              className="p"
-              style={{ width: '100%', marginTop: 6 }}
-              disabled={submitting}
-            >
+          </div>
+
+          <div className="card booking-summary">
+            <b>Ringkasan Booking</b>
+            <div className="mu">Layanan: {selectedMain.map((s) => s.nama).join(', ') || 'Belum dipilih'}</div>
+            {selectedExtras.length > 0 && <div className="mu">Extra: {selectedExtras.map((s) => s.nama).join(', ')}</div>}
+            <strong>{rp(totalHarga)}</strong>
+            <button type="submit" className="p" style={{ width: '100%', marginTop: 14 }} disabled={submitting}>
               {submitting ? 'Memproses Reservasi...' : 'Konfirmasi Booking'}
             </button>
           </div>
