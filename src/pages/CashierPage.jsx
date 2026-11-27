@@ -254,6 +254,34 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       )}
 
       <div className="card">
+        <h2>Jenis pelanggan</h2>
+        <div className="two" style={{ marginBottom: 10 }}>
+          <button type="button" className={ptype === 'regular' ? 'on' : ''} onClick={() => handleSelectPtype('regular')}>
+            Regular
+          </button>
+          <button type="button" className={ptype === 'reservasi' ? 'on' : ''} onClick={() => handleSelectPtype('reservasi')}>
+            Reservasi
+          </button>
+        </div>
+        {ptype === 'reservasi' ? (
+          activeBookings.length ? (
+            <>
+              <label>Pilih reservasi *</label>
+              <select value={bkId} onChange={(e) => handlePickBooking(e.target.value)}>
+                <option value="">Pilih reservasi…</option>
+                {activeBookings.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.tanggal} {b.jam} · {b.nama} · {b.svc_nama}
+                  </option>
+                ))}
+              </select>
+              {pickedBooking && <p className="mu">{pickedBooking.nama} · {pickedBooking.wa} · Capster {pickedBooking.kap_nama}</p>}
+            </>
+          ) : <p className="mu">Belum ada reservasi aktif.</p>
+        ) : null}
+      </div>
+
+      <div className="card">
         <h2>Pilih layanan</h2>
         {KATS.map((kat) => {
           const list = services.filter((v) => (v.kat || 'Hair Cut') === kat);
@@ -344,45 +372,6 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
             </select>
           </>
         )}
-
-        <label>Jenis pelanggan *</label>
-        <div className="two" style={{ marginBottom: 10 }}>
-          <button
-            className={ptype === 'regular' ? 'on' : ''}
-            onClick={() => handleSelectPtype('regular')}
-          >
-            Regular
-          </button>
-          <button
-            className={ptype === 'reservasi' ? 'on' : ''}
-            onClick={() => handleSelectPtype('reservasi')}
-          >
-            Reservasi
-          </button>
-        </div>
-
-        {ptype === 'reservasi' ? (
-          activeBookings.length ? (
-            <>
-              <label>Pilih reservasi *</label>
-              <select value={bkId} onChange={(e) => handlePickBooking(e.target.value)}>
-                <option value="">Pilih reservasi…</option>
-                {activeBookings.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.tanggal} {b.jam} · {b.nama} · {b.svc_nama}
-                  </option>
-                ))}
-              </select>
-              {pickedBooking && (
-                <p className="mu">
-                  {pickedBooking.nama} · {pickedBooking.wa} · Capster {pickedBooking.kap_nama}
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="mu">Belum ada reservasi aktif.</p>
-          )
-        ) : null}
 
         <label>Metode bayar *</label>
         <div className="two" style={{ marginBottom: 10 }}>
