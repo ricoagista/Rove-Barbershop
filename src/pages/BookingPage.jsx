@@ -149,10 +149,8 @@ export default function BookingPage() {
   const selectedServices = selectedSvcIds.map((id) => services.find((s) => s.id === id)).filter(Boolean);
   const mainServices = services.filter((s) => !s.kat || s.kat === 'Hair Cut');
   const extraServices = services.filter((s) => s.kat === 'Extra Service');
-  const products = services.filter((s) => s.kat === 'Produk');
   const selectedMain = selectedServices.filter((s) => !s.kat || s.kat === 'Hair Cut');
   const selectedExtras = selectedServices.filter((s) => s.kat === 'Extra Service');
-  const selectedProducts = selectedServices.filter((s) => s.kat === 'Produk');
   const totalHarga = selectedServices.reduce((sum, s) => sum + s.harga, 0);
   const policyLines = String(brand.pol || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
@@ -285,7 +283,6 @@ export default function BookingPage() {
             <b>Ringkasan Booking</b>
             <div className="mu">Layanan: {selectedMain.map((s) => s.nama).join(', ') || 'Belum dipilih'}</div>
             {selectedExtras.length > 0 && <div className="mu">Extra: {selectedExtras.map((s) => s.nama).join(', ')}</div>}
-            {selectedProducts.length > 0 && <div className="mu">Produk: {selectedProducts.map((s) => s.nama).join(', ')}</div>}
             <strong>{rp(totalHarga)}</strong>
           </div>
           <div className="card">
@@ -330,16 +327,12 @@ export default function BookingPage() {
             )}
           </div>
 
-          {selectedMain.length > 0 && <>
-            <div className="card">
-              <h2>Extra Service (opsional)</h2>
-              {extraServices.length ? <div className="grid">{extraServices.map((s) => <div key={s.id} className={`svc ${selectedSvcIds.includes(s.id) ? 'on' : ''}`} role="button" tabIndex={0} onClick={() => toggleService(s.id)}><b>{s.nama}</b><span>{rp(s.harga)}</span></div>)}</div> : <p className="mu">Belum ada extra service.</p>}
+          {selectedMain.length > 0 && (
+            <div className="extra-services" style={{ marginTop: 12 }}>
+              <h3>Extra Service (opsional)</h3>
+              {extraServices.length ? <div className="grid">{extraServices.map((s) => <div key={s.id} className={`svc ${selectedSvcIds.includes(s.id) ? 'on' : ''}`} role="button" tabIndex={0} onClick={() => toggleService(s.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleService(s.id); } }}><b>{s.nama}</b><span>{rp(s.harga)}</span></div>)}</div> : <p className="mu">Belum ada extra service.</p>}
             </div>
-            <div className="card">
-              <h2>Produk (opsional)</h2>
-              {products.length ? <div className="grid">{products.map((s) => <div key={s.id} className={`svc ${selectedSvcIds.includes(s.id) ? 'on' : ''}`} role="button" tabIndex={0} onClick={() => toggleService(s.id)}><b>{s.nama}</b><span>{rp(s.harga)}</span></div>)}</div> : <p className="mu">Belum ada produk.</p>}
-            </div>
-          </>}
+          )}
 
           <div className="card">
             <h2>2. Jumlah Orang &amp; Jadwal</h2>
