@@ -328,9 +328,9 @@ export default function BookingPage() {
           </div>
 
           {selectedMain.length > 0 && (
-            <div className="extra-services" style={{ marginTop: 12 }}>
+            <div className="extra-sheet" role="region" aria-label="Pilihan extra service">
               <h3>Extra Service (opsional)</h3>
-              {extraServices.length ? <div className="grid">{extraServices.map((s) => <div key={s.id} className={`svc ${selectedSvcIds.includes(s.id) ? 'on' : ''}`} role="button" tabIndex={0} onClick={() => toggleService(s.id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleService(s.id); } }}><b>{s.nama}</b><span>{rp(s.harga)}</span></div>)}</div> : <p className="mu">Belum ada extra service.</p>}
+              {extraServices.length ? <div className="grid">{extraServices.map((s) => <button type="button" key={s.id} className={`svc ${selectedSvcIds.includes(s.id) ? 'on' : ''}`} onClick={() => toggleService(s.id)} aria-pressed={selectedSvcIds.includes(s.id)}><b>{s.nama}</b><span>{rp(s.harga)}</span></button>)}</div> : <p className="mu">Belum ada extra service.</p>}
             </div>
           )}
 
