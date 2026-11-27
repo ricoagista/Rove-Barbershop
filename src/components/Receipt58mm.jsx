@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { rp, fmtPhone } from '../utils/format';
 
 export default function Receipt58mm({ trx }) {
-  const { brand, kontak, notaConfig } = useApp();
+  const { brand, kontak, notaConfig, services } = useApp();
   const [promoReady, setPromoReady] = React.useState(!notaConfig.img);
 
   React.useEffect(() => {
@@ -24,6 +24,12 @@ export default function Receipt58mm({ trx }) {
     minute: '2-digit',
   });
 
+  const receiptItems = (trx.items || []).map((item) => {
+    const service = services.find((s) => s.id === item.id || s.nama === item.nama);
+    const qty = Number(item.qty) || 0;
+    const harga = Number(item.harga ?? service?.harga) || 0;
+    return { ...item, nama: item.nama || service?.nama || '-', qty, harga };
+  }).filter((item) => item.qty > 0);
   const isReservasi = trx.jenis === 'reservasi';
   const rawMsg = isReservasi
     ? notaConfig.msgReservasi ?? notaConfig.msgLama ?? 'Terima kasih sudah melakukan reservasi di Rove Barbershop.'
@@ -67,12 +73,12 @@ export default function Receipt58mm({ trx }) {
       <Row left="Pelanggan" right={trx.pelanggan || '-'} />
       {trx.wa && <Row left="WA" right={trx.wa} />}
       <hr />
-      {(trx.items || []).map((item, idx) => (
+      {receiptItems.map((item, idx) => (
         <React.Fragment key={idx}>
           <div>{item.nama}</div>
           <Row
-            left={`${item.qty} x ${new Intl.NumberFormat('id-ID').format(item.harga)}`}
-            right={new Intl.NumberFormat('id-ID').format(item.harga * item.qty)}
+            left={`${item.qty} x ${rp(item.harga)}`}
+            right={rp(item.harga * item.qty)}
           />
         </React.Fragment>
       ))}
