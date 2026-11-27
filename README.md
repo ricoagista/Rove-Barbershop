@@ -31,7 +31,8 @@ Jalankan berurutan di staging/produksi oleh operator database, bukan dari fronte
 1. Backup database jika diperlukan.
 2. Jalankan `supabase/migration.sql`.
 3. Jalankan `supabase/migration_reservation_operations.sql`.
-4. Deploy frontend baru.
+4. Jalankan `supabase/migration_2026_11_reservation_fixes.sql`.
+5. Deploy frontend baru.
 5. Uji staging.
 6. Jalankan `supabase/revoke_public_settings.sql` paling terakhir.
 
@@ -39,7 +40,7 @@ Jalankan berurutan di staging/produksi oleh operator database, bukan dari fronte
 
 1. Backup database.
 2. Jangan jalankan ulang `supabase/migration.sql`.
-3. Jalankan `supabase/migration_reservation_operations.sql` versi terbaru.
+3. Jalankan hanya file migrasi yang belum pernah dijalankan: `supabase/migration_reservation_operations.sql`, lalu `supabase/migration_2026_11_reservation_fixes.sql`.
 4. Deploy frontend baru.
 5. Uji staging.
 6. Jalankan `supabase/revoke_public_settings.sql` paling terakhir.

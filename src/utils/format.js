@@ -59,7 +59,12 @@ export function rangeOf(per, d) {
 export const inRange = (x, R) => x >= R[0] && x <= R[1];
 
 export function downloadCsv(filename, rows) {
-  const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const q = (v) => {
+    if (typeof v === 'number') return String(v);
+    const text = String(v == null ? '' : v);
+    const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+    return '"' + safe.replace(/"/g, '""') + '"';
+  };
   const csvContent = '\ufeff' + rows.map((r) => r.map(q).join(',')).join('\n');
   try {
     const u = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));

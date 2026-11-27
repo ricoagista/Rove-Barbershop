@@ -22,6 +22,8 @@
   --info: #A1B8E3;
   --unavailable-bg: #2B2F37;
   --unavailable-text: #A8A9AC;
+
+button.unavailable { background: var(--unavailable-bg); color: var(--unavailable-text); }
   --tx: var(--text);
   --mu: var(--text-muted);
   --ac: var(--accent-text);

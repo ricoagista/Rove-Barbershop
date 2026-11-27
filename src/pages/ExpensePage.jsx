@@ -65,7 +65,8 @@ export default function ExpensePage() {
 
   const handleDelete = async (id) => {
     if (!isOwner) return;
-    await supabase.from('expenses').delete().eq('id', id);
+    const { error } = await supabase.from('expenses').delete().eq('id', id);
+    if (error) return setErr(error.message);
     await refreshAll();
   };
 

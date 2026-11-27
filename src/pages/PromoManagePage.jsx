@@ -45,7 +45,8 @@ export default function PromoManagePage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Hapus promo ini?')) return;
-    await supabase.from('promos').delete().eq('id', id);
+    const { error } = await supabase.from('promos').delete().eq('id', id);
+    if (error) return setErr(error.message);
     await refreshAll();
   };
 

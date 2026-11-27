@@ -172,8 +172,9 @@ export default function ReportPage({ onReprint }) {
   };
 
   const handleDeleteSale = async (id) => {
-    if (!window.confirm('Hapus transaksi ini secara permanen?')) return;
-    await supabase.from('sales').delete().eq('id', id);
+    if (!window.confirm('Hapus transaksi ini secara permanen? Status reservasi terkait tidak otomatis dikembalikan dari "Selesai".')) return;
+    const { error } = await supabase.from('sales').delete().eq('id', id);
+    if (error) return setEditErr(error.message);
     await refreshAll();
   };
 
@@ -200,7 +201,7 @@ export default function ReportPage({ onReprint }) {
         tstr(s.ts),
         s.pelanggan,
         s.wa,
-        s.jenis,
+        s.jenis === 'reservasi' ? 'Reservasi' : 'Regular',
         (s.items || []).map((it) => `${it.nama} (${it.qty})`).join('; '),
         s.capster_nama,
         s.kasir_nama,

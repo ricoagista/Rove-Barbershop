@@ -363,11 +363,12 @@ export default function BookingPage() {
                   <button
                     type="button"
                     key={slot}
-                    className={jam === slot ? 'on' : ''}
+                    className={`${jam === slot ? 'on' : ''} ${full ? 'unavailable' : ''}`}
                     disabled={!allowed || full}
+                    aria-label={`${slot}${full ? ', penuh' : ''}`}
                     onClick={() => handleSelectTime(slot)}
                   >
-                    {isSlotFull(tanggal, slot) ? 'Penuh' : slot}
+                    <span>{slot}</span>{full && <small>Penuh</small>}
                   </button>
                 );
               })}

@@ -27,7 +27,7 @@ export default function Receipt58mm({ trx }) {
   const isReservasi = trx.jenis === 'reservasi';
   const rawMsg = isReservasi
     ? notaConfig.msgReservasi ?? notaConfig.msgLama ?? 'Terima kasih sudah melakukan reservasi di Rove Barbershop.'
-    : notaConfig.msgRegular ?? notaConfig.msgBaru ?? 'Sampaikan pengalaman baik Anda pada Kawan\nJika ada kurang puas info kami GARANASI 24 Jam';
+    : notaConfig.msgRegular ?? notaConfig.msgBaru ?? 'Sampaikan pengalaman baik Anda pada Kawan\nJika ada kurang puas info kami GARANSI 24 Jam';
 
   const Row = ({ left, right, big }) => (
     <table className={`nt ${big ? 'big' : ''}`}>

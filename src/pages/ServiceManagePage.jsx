@@ -64,7 +64,8 @@ export default function ServiceManagePage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Hapus layanan ini?')) return;
-    await supabase.from('services').delete().eq('id', id);
+    const { error } = await supabase.from('services').delete().eq('id', id);
+    if (error) return setErr(error.message);
     if (editId === id) resetForm();
     await refreshAll();
   };
