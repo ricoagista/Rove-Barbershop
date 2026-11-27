@@ -441,11 +441,11 @@ export default function BookingPage() {
               value={wa}
               onChange={(e) => setWa(e.target.value)}
             />
-            {errorMsg && <div className="err">{errorMsg}</div>}
           </div>
 
           <div className="card booking-summary">
             <b>Ringkasan Booking</b>
+            {errorMsg && <div className="err booking-error" role="alert">{errorMsg}</div>}
             <div className="mu">Layanan: {selectedMain.map((s) => s.nama).join(', ') || 'Belum dipilih'}</div>
             {selectedExtras.length > 0 && <div className="mu">Extra: {selectedExtras.map((s) => s.nama).join(', ')}</div>}
             <strong>{rp(totalHarga)}</strong>

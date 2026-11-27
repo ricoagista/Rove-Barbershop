@@ -296,6 +296,15 @@ th, td {
   min-height: 20px;
 }
 
+.booking-error {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--bad);
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
 .two {
   display: grid;
   grid-template-columns: 1fr 1fr;
