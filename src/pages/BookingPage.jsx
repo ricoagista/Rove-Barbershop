@@ -186,7 +186,7 @@ export default function BookingPage() {
     }
     const selectedHairCutCount = selectedServices.filter((s) => s.kat === 'Hair Cut').length;
     if (selectedHairCutCount !== peopleCount) {
-      return setErrorMsg(`Jumlah Hair Cut harus sama dengan jumlah orang (${peopleCount}).`);
+      return setErrorMsg(`Jumlah Hair Cut harus sama dengan jumlah orang ${peopleCount}.`);
     }
     if (!tanggal || !jam) {
       return setErrorMsg('Pilih tanggal dan jam layanan.');
