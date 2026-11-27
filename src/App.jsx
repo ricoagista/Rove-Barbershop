@@ -14,7 +14,7 @@ import AccountManagePage from './pages/AccountManagePage';
 import SettingsPage from './pages/SettingsPage';
 
 function MainRouter() {
-  const { isConfigured, ready, sessionUser, me, view, tab, setTab, logout } = useApp();
+  const { isConfigured, ready, sessionUser, me, tab, setTab, logout } = useApp();
   const [reprintReceipt, setReprintReceipt] = useState(null);
 
   if (!isConfigured) {
