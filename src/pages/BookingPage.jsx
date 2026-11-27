@@ -344,7 +344,7 @@ export default function BookingPage() {
           {selectedMain.length > 0 && (
             <div className="extra-sheet" role="region" aria-label="Pilihan extra service">
               <h3>Extra Service (opsional)</h3>
-              {extraServices.length ? <div className="grid">{extraServices.map((s) => { const qty = selectedSvcIds.filter((id) => id === s.id).length; return <div key={s.id} className={`svc ${qty ? 'on' : ''}`}><b>{s.nama}</b><span>{rp(s.harga)} · {qty} dari {peopleCount} orang</span><span className="q"><button type="button" aria-label={`Kurangi ${s.nama}`} disabled={!qty} onClick={() => changeExtraQty(s.id, -1)}>−</button><b>{qty}</b><button type="button" aria-label={`Tambah ${s.nama}`} disabled={qty >= peopleCount} onClick={() => changeExtraQty(s.id, 1)}>+</button></span></div>; })}</div> : <p className="mu">Belum ada extra service.</p>}
+              {extraServices.length ? <div className="grid">{extraServices.map((s) => { const qty = selectedSvcIds.filter((id) => id === s.id).length; return peopleCount === 1 ? <button type="button" key={s.id} className={`svc ${qty ? 'on' : ''}`} onClick={() => toggleService(s.id)} aria-pressed={Boolean(qty)}><b>{s.nama}</b><span>{rp(s.harga)}</span></button> : <div key={s.id} className={`svc ${qty ? 'on' : ''}`}><b>{s.nama}</b><span>{rp(s.harga)} · {qty} dari {peopleCount} orang</span><span className="q"><button type="button" aria-label={`Kurangi ${s.nama}`} disabled={!qty} onClick={() => changeExtraQty(s.id, -1)}>−</button><b>{qty}</b><button type="button" aria-label={`Tambah ${s.nama}`} disabled={qty >= peopleCount} onClick={() => changeExtraQty(s.id, 1)}>+</button></span></div>; })}</div> : <p className="mu">Belum ada extra service.</p>}
             </div>
           )}
 
