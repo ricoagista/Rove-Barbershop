@@ -295,7 +295,6 @@ export default function BookingPage() {
         <form onSubmit={handleSubmit}>
           <div className="card">
             <h2>Jumlah Orang</h2>
-            <p className="mu">Pilih jumlah orang yang akan datang.</p>
             <div className="q" aria-labelledby="people-count-top">
               <button type="button" aria-label="Kurangi jumlah orang" disabled={peopleCount <= 1} onClick={() => changePeopleCount(peopleCount - 1)}>−</button>
               <b id="people-count-top" aria-live="polite">{peopleCount}</b>
