@@ -692,6 +692,26 @@ th, td {
   padding: 2px 2px;
 }
 
+#nota .receipt-item {
+  margin: 4px 0;
+}
+
+#nota .receipt-item-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+#nota .receipt-item-detail {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-left: 8px;
+}
+
+#nota .receipt-item-detail b {
+  white-space: nowrap;
+}
+
 #nota hr {
   border: 0;
   border-top: 1px dashed #000;

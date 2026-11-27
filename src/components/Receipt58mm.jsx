@@ -73,15 +73,17 @@ export default function Receipt58mm({ trx }) {
       <Row left="Pelanggan" right={trx.pelanggan || '-'} />
       {trx.wa && <Row left="WA" right={trx.wa} />}
       <hr />
-      {receiptItems.map((item, idx) => (
-        <React.Fragment key={idx}>
-          <div>{item.nama}</div>
-          <Row
-            left={`${item.qty} x ${rp(item.harga)}`}
-            right={rp(item.harga * item.qty)}
-          />
-        </React.Fragment>
-      ))}
+      <div className="receipt-items">
+        {receiptItems.map((item, idx) => (
+          <div className="receipt-item" key={idx}>
+            <div className="receipt-item-name">{item.nama}</div>
+            <div className="receipt-item-detail">
+              <span>{item.qty} x {rp(item.harga)}</span>
+              <b>{rp(item.harga * item.qty)}</b>
+            </div>
+          </div>
+        ))}
+      </div>
       <hr />
       {trx.diskon > 0 && (
         <>
