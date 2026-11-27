@@ -309,7 +309,12 @@ th, td {
 }
 
 .q button {
-  padding: 2px 12px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 12px;
+  display: inline-grid;
+  place-items: center;
 }
 
 .bar {
