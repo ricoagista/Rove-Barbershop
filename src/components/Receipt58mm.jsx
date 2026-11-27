@@ -4,6 +4,15 @@ import { rp, fmtPhone } from '../utils/format';
 
 export default function Receipt58mm({ trx }) {
   const { brand, kontak, notaConfig } = useApp();
+  const [promoReady, setPromoReady] = React.useState(!notaConfig.img);
+
+  React.useEffect(() => {
+    if (!notaConfig.img) return setPromoReady(true);
+    const image = new Image();
+    image.onload = () => setPromoReady(true);
+    image.onerror = () => setPromoReady(false);
+    image.src = notaConfig.img;
+  }, [notaConfig.img]);
   if (!trx) return null;
 
   const tg = new Date(trx.ts).toLocaleString('id-ID', {
@@ -15,14 +24,10 @@ export default function Receipt58mm({ trx }) {
     minute: '2-digit',
   });
 
-  const isLama = trx.jenis === 'lama' || trx.lama === true;
-  const rawMsg = isLama
-    ? notaConfig.msgLama == null
-      ? 'Terimakasih Sudah Menjadi RVB Fams'
-      : notaConfig.msgLama
-    : notaConfig.msgBaru == null
-    ? 'Sampaikan pengalaman baik Anda pada Kawan\nJika ada kurang puas info kami GARANASI 24 Jam'
-    : notaConfig.msgBaru;
+  const isReservasi = trx.jenis === 'reservasi';
+  const rawMsg = isReservasi
+    ? notaConfig.msgReservasi ?? notaConfig.msgLama ?? 'Terima kasih sudah melakukan reservasi di Rove Barbershop.'
+    : notaConfig.msgRegular ?? notaConfig.msgBaru ?? 'Sampaikan pengalaman baik Anda pada Kawan\nJika ada kurang puas info kami GARANASI 24 Jam';
 
   const Row = ({ left, right, big }) => (
     <table className={`nt ${big ? 'big' : ''}`}>
@@ -100,9 +105,9 @@ export default function Receipt58mm({ trx }) {
           <hr />
         </>
       )}
-      {notaConfig.img && (
+      {notaConfig.img && promoReady && (
         <>
-          <img className="ni" src={notaConfig.img} alt="Promo Nota" />
+          <img className="ni" src={notaConfig.img} alt="Promo Nota" onLoad={() => setPromoReady(true)} />
           <hr />
         </>
       )}

@@ -604,9 +604,12 @@ th, td {
 
 #nota .ni {
   display: block;
-  width: 100%;
+  width: 40%;
+  max-width: 17.5mm;
   height: auto;
-  margin: 4px 0;
+  margin: 4px auto;
+  object-fit: contain;
+  break-inside: avoid;
 }
 
 #nota .nb {

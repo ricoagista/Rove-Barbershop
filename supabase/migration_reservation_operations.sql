@@ -48,14 +48,18 @@ end $$;
 revoke all on function public.set_booking_slot_closure(date,text,uuid,boolean) from public;
 grant execute on function public.set_booking_slot_closure(date,text,uuid,boolean) to authenticated;
 
+-- Booking multi-person support. Operator must run this migration before using p_people_count.
+alter table public.bookings add column if not exists people_count integer not null default 1 check (people_count > 0);
+
 -- Ganti RPC booking dengan validasi WIB dan lock bersama per tanggal.
 drop function if exists public.buat_booking(uuid[], date, text, uuid, text, text);
-create or replace function public.buat_booking(p_svc_ids uuid[], p_tanggal date, p_jam text, p_kap_id uuid, p_nama text, p_wa text)
+create or replace function public.buat_booking(p_svc_ids uuid[], p_tanggal date, p_jam text, p_kap_id uuid, p_nama text, p_wa text, p_people_count integer default 1)
 returns jsonb language plpgsql security definer set search_path=public as $$
 declare r record; x uuid; items jsonb:='[]'; total int:=0; names text:=''; mins int; now_wib timestamp; outrow bookings%rowtype; n int;
 begin
  now_wib:=now() at time zone 'Asia/Jakarta';
- if trim(coalesce(p_nama,''))='' or regexp_replace(coalesce(p_wa,''),'\D','','g') !~ '^62[0-9]{8,13}$' then raise exception 'Data pelanggan tidak valid.'; end if;
+ if p_people_count is null or p_people_count < 1 then raise exception 'Jumlah orang tidak valid.'; end if;
+  if trim(coalesce(p_nama,''))='' or regexp_replace(coalesce(p_wa,''),'\D','','g') !~ '^62[0-9]{8,13}$' then raise exception 'Data pelanggan tidak valid.'; end if;
  if p_tanggal is null or p_jam !~ '^[0-2][0-9]:[0-5][0-9]$' then raise exception 'Tanggal atau jam tidak valid.'; end if;
  mins:=split_part(p_jam,':',1)::int*60+split_part(p_jam,':',2)::int;
  if mins < 780 or mins > 1140 then raise exception 'Jam layanan di luar jam operasional.'; end if;
@@ -90,12 +94,13 @@ select
   coalesce((select data->>'pol' from public.settings where id='utama'),'') as booking_policy;
 grant select on public.public_booking_settings to anon, authenticated;
 
-create or replace function public.buat_booking(p_svc_ids uuid[], p_tanggal date, p_jam text, p_kap_id uuid, p_nama text, p_wa text)
+create or replace function public.buat_booking(p_svc_ids uuid[], p_tanggal date, p_jam text, p_kap_id uuid, p_nama text, p_wa text, p_people_count integer default 1)
 returns jsonb language plpgsql security definer set search_path=public as $$
 declare r record; x uuid; items jsonb:='[]'; total int:=0; names text:=''; mins int; now_wib timestamp; outrow bookings%rowtype; n int; open_min int; close_min int; last_min int; max_min int;
 begin
  now_wib:=now() at time zone 'Asia/Jakarta';
- if trim(coalesce(p_nama,''))='' or regexp_replace(coalesce(p_wa,''),'\D','','g') !~ '^62[0-9]{8,13}$' then raise exception 'Data pelanggan tidak valid.'; end if;
+ if p_people_count is null or p_people_count < 1 then raise exception 'Jumlah orang tidak valid.'; end if;
+  if trim(coalesce(p_nama,''))='' or regexp_replace(coalesce(p_wa,''),'\D','','g') !~ '^62[0-9]{8,13}$' then raise exception 'Data pelanggan tidak valid.'; end if;
  if p_tanggal is null or p_jam !~ '^[0-2][0-9]:[0-5][0-9]$' then raise exception 'Tanggal atau jam tidak valid.'; end if;
  select extract(hour from (coalesce(data->>'jam_buka','13:00')::time))*60+extract(minute from (coalesce(data->>'jam_buka','13:00')::time)), extract(hour from (coalesce(data->>'jam_tutup','21:00')::time))*60+extract(minute from (coalesce(data->>'jam_tutup','21:00')::time)), extract(hour from (coalesce(data->>'batas_reservasi_terakhir','19:00')::time))*60+extract(minute from (coalesce(data->>'batas_reservasi_terakhir','19:00')::time)) into open_min,close_min,last_min from settings where id='operasional';
  open_min:=coalesce(open_min,780); close_min:=coalesce(close_min,1260); last_min:=coalesce(last_min,1140); max_min:=least(last_min,close_min-60);

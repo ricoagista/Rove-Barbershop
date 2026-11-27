@@ -17,6 +17,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   } = useApp();
 
   const [cart, setCart] = useState({});
+  const hairCutCount = Object.entries(cart).reduce((sum, [id, qty]) => sum + (services.find((s) => s.id === id)?.kat === 'Hair Cut' ? qty : 0), 0);
   const [promoId, setPromoId] = useState('');
   const [capsterId, setCapsterId] = useState('');
   const [ptype, setPtype] = useState('regular'); // 'regular' | 'reservasi'
@@ -62,14 +63,23 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   const bayarNum = Number(bayar) || 0;
 
   const addItem = (id) => {
+    const svc = services.find((s) => s.id === id);
+    if (svc?.kat === 'Hair Cut' && (cart[id] || 0) >= 1 && ptype === 'regular') {
+      setErr('Hair Cut sudah dipilih. Gunakan jumlah orang untuk menambah Hair Cut.');
+      return;
+    }
     setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
     setErr('');
   };
 
   const changeQty = (id, delta) => {
+    const svc = services.find((s) => s.id === id);
     setCart((prev) => {
       const next = { ...prev };
-      const val = (next[id] || 0) + delta;
+      const current = next[id] || 0;
+      const hairCount = Object.entries(prev).reduce((sum, [serviceId, qty]) => sum + (services.find((s) => s.id === serviceId)?.kat === 'Hair Cut' ? qty : 0), 0);
+      const maxQty = svc?.kat === 'Hair Cut' ? (ptype === 'reservasi' ? Math.max(hairCount, current) : hairCount + 1) : Infinity;
+      const val = Math.min(maxQty, current + delta);
       if (val <= 0) delete next[id];
       else next[id] = val;
       return next;
@@ -126,6 +136,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
 
     if (!activeCap) {
       return setErr('Pilih capster yang melayani.');
+    }
+    if (!hairCutCount) {
+      return setErr('Pilih minimal satu layanan Hair Cut.');
     }
     if (ptype === 'reservasi' && !bkId) {
       return setErr('Pilih reservasi terlebih dulu.');
@@ -270,6 +283,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
 
       <div className="card">
         <h2>Keranjang</h2>
+        <p className="mu">Jumlah orang: {hairCutCount}</p>
         {cartEntries.length ? (
           cartEntries.map(({ svc, qty }) => (
             <div key={svc.id} className="row">

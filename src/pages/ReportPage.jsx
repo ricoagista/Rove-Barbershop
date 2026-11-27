@@ -13,7 +13,7 @@ import {
 } from '../utils/format';
 
 export default function ReportPage({ onReprint }) {
-  const { me, sales, expenses, capsters, brand, kontak, refreshAll } = useApp();
+  const { me, sales, expenses, services, capsters, brand, kontak, refreshAll } = useApp();
 
   const [per, setPer] = useState('harian'); // 'harian' | 'minggu' | 'bulan' | 'custom'
   const [refDate, setRefDate] = useState(ld());
@@ -28,6 +28,7 @@ export default function ReportPage({ onReprint }) {
   const [editPelanggan, setEditPelanggan] = useState('');
   const [editWa, setEditWa] = useState('');
   const [editMetode, setEditMetode] = useState('Tunai');
+  const [editItems, setEditItems] = useState([]);
   const [editTotal, setEditTotal] = useState('');
   const [editErr, setEditErr] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
@@ -125,6 +126,7 @@ export default function ReportPage({ onReprint }) {
     setEditPelanggan(s.pelanggan || '');
     setEditWa(s.wa || '');
     setEditMetode(s.metode || 'Tunai');
+    setEditItems((s.items || []).map((item) => ({ ...item })));
     setEditTotal(String(s.total || 0));
     setEditErr('');
   };
@@ -135,7 +137,10 @@ export default function ReportPage({ onReprint }) {
     if (!editPelanggan.trim()) return setEditErr('Nama pelanggan wajib diisi.');
     const cleanWa = normWa(editWa);
     if (!cleanWa) return setEditErr('Nomor WhatsApp tidak valid.');
-    const numTotal = Number(editTotal) || 0;
+    const items = editItems.filter((item) => item.qty > 0 && item.nama.trim());
+    if (!items.length) return setEditErr('Pilih minimal satu layanan.');
+    const subtotal = items.reduce((sum, item) => sum + Number(item.harga || 0) * Number(item.qty || 0), 0);
+    const numTotal = Number(editTotal) || subtotal;
     const cap = capsters.find((c) => c.id === editCapId);
 
     setSavingEdit(true);
@@ -144,6 +149,8 @@ export default function ReportPage({ onReprint }) {
         pelanggan: editPelanggan.trim(),
         wa: cleanWa,
         metode: editMetode,
+        items,
+        subtotal,
         total: numTotal,
         capster_id: cap ? cap.id : editingTrx.capster_id,
         capster_nama: cap ? cap.name : editingTrx.capster_nama,
@@ -373,6 +380,17 @@ export default function ReportPage({ onReprint }) {
         <div className="card">
           <h2>Edit Transaksi ({editingTrx.nomor})</h2>
           <form onSubmit={handleSaveEdit}>
+            <label>Layanan</label>
+            {editItems.map((item, index) => (
+              <div key={`${item.nama}-${index}`} className="row">
+                <span>{item.nama}</span>
+                <span className="q"><button type="button" onClick={() => setEditItems((prev) => prev.map((v, i) => i === index ? { ...v, qty: Math.max(0, Number(v.qty) - 1) } : v))}>−</button>{item.qty}<button type="button" onClick={() => setEditItems((prev) => prev.map((v, i) => i === index ? { ...v, qty: Number(v.qty) + 1 } : v))}>+</button></span>
+              </div>
+            ))}
+            <select value="" onChange={(e) => { const svc = services.find((v) => v.id === e.target.value); if (svc) setEditItems((prev) => [...prev, { nama: svc.nama, harga: svc.harga, qty: 1, kat: svc.kat }]); }}>
+              <option value="">Tambah layanan…</option>
+              {services.map((svc) => <option key={svc.id} value={svc.id}>{svc.nama} — {rp(svc.harga)}</option>)}
+            </select>
             <label>Pelanggan</label>
             <input
               value={editPelanggan}
@@ -426,6 +444,7 @@ export default function ReportPage({ onReprint }) {
               <th>No</th>
               <th>Waktu</th>
               <th>Pelanggan</th>
+              <th>Jenis</th>
               <th>Layanan</th>
               <th>Capster</th>
               <th>Metode</th>
@@ -443,9 +462,8 @@ export default function ReportPage({ onReprint }) {
                   </td>
                   <td>{tstr(s.ts)}</td>
                   <td>{s.pelanggan}</td>
-                  <td>
-                    {(s.items || []).map((it) => `${it.nama} (${it.qty})`).join(', ')}
-                  </td>
+                  <td>{s.jenis === 'reservasi' ? 'Reservasi' : 'Regular'}</td>
+                  <td>{(s.items || []).map((it) => `${it.nama} (${it.qty})`).join(', ')}</td>
                   <td>{s.capster_nama}</td>
                   <td>{s.metode}</td>
                   <td>{rp(s.total)}</td>
@@ -474,7 +492,7 @@ export default function ReportPage({ onReprint }) {
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="mu">
+                <td colSpan={9} className="mu">
                   Belum ada transaksi pada periode ini.
                 </td>
               </tr>

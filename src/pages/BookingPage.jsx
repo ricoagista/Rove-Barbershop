@@ -36,6 +36,7 @@ export default function BookingPage() {
 
   const today = ld();
   const [selectedSvcIds, setSelectedSvcIds] = useState([]);
+  const [peopleCount, setPeopleCount] = useState(1);
   const [tanggal, setTanggal] = useState(() => readBookingDate(today));
   const [jam, setJam] = useState('');
   const [kapId, setKapId] = useState('');
@@ -78,9 +79,53 @@ export default function BookingPage() {
   const isSlotFull = (tglStr, jamStr) => capsters.length > 0 && capsters.every((c) => isCapsterBusy(c.id, tglStr, jamStr));
 
   const toggleService = (id) => {
-    setSelectedSvcIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    const svc = services.find((s) => s.id === id);
+    setSelectedSvcIds((prev) => {
+      const count = prev.filter((x) => x === id).length;
+      if (svc?.kat === 'Hair Cut') {
+        if (peopleCount === 1) {
+          return count ? prev : [...prev.filter((selectedId) => services.find((s) => s.id === selectedId)?.kat !== 'Hair Cut'), id];
+        }
+        const hairCutCount = prev.filter((selectedId) => services.find((s) => s.id === selectedId)?.kat === 'Hair Cut').length;
+        return hairCutCount < peopleCount ? [...prev, id] : prev;
+      }
+      return count ? prev.filter((x) => x !== id) : [...prev, id];
+    });
+  };
+
+  const changeHairCutQty = (id, delta) => {
+    setSelectedSvcIds((prev) => {
+      const count = prev.filter((x) => x === id).length;
+      const total = prev.filter((selectedId) => services.find((s) => s.id === selectedId)?.kat === 'Hair Cut').length;
+      if (delta > 0 && total >= peopleCount) return prev;
+      if (delta < 0 && count === 0) return prev;
+      if (delta < 0) {
+        let removed = false;
+        return prev.filter((x) => {
+          if (x === id && !removed) { removed = true; return false; }
+          return true;
+        });
+      }
+      return [...prev, id];
+    });
+  };
+
+  const changePeopleCount = (nextCount) => {
+    const next = Math.max(1, nextCount);
+    setPeopleCount(next);
+    if (next >= peopleCount) return;
+    setSelectedSvcIds((prev) => {
+      let remaining = next;
+      return prev.filter((id) => {
+        const isHairCut = services.find((s) => s.id === id)?.kat === 'Hair Cut';
+        if (!isHairCut) return true;
+        if (remaining > 0) {
+          remaining -= 1;
+          return true;
+        }
+        return false;
+      });
+    });
   };
 
   const handleDateChange = (val) => {
@@ -101,7 +146,13 @@ export default function BookingPage() {
     }
   };
 
-  const selectedServices = services.filter((s) => selectedSvcIds.includes(s.id));
+  const selectedServices = selectedSvcIds.map((id) => services.find((s) => s.id === id)).filter(Boolean);
+  const mainServices = services.filter((s) => !s.kat || s.kat === 'Hair Cut');
+  const extraServices = services.filter((s) => s.kat === 'Extra Service');
+  const products = services.filter((s) => s.kat === 'Produk');
+  const selectedMain = selectedServices.filter((s) => !s.kat || s.kat === 'Hair Cut');
+  const selectedExtras = selectedServices.filter((s) => s.kat === 'Extra Service');
+  const selectedProducts = selectedServices.filter((s) => s.kat === 'Produk');
   const totalHarga = selectedServices.reduce((sum, s) => sum + s.harga, 0);
   const policyLines = String(brand.pol || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
@@ -115,6 +166,10 @@ export default function BookingPage() {
     if (!selectedSvcIds.length) {
       return setErrorMsg('Pilih minimal satu layanan.');
     }
+    const selectedHairCutCount = selectedServices.filter((s) => s.kat === 'Hair Cut').length;
+    if (selectedHairCutCount !== peopleCount) {
+      return setErrorMsg(`Jumlah Hair Cut harus sama dengan jumlah orang (${peopleCount}). Pilih atau atur Hair Cut terlebih dahulu.`);
+    }
     if (!tanggal || !jam) {
       return setErrorMsg('Pilih tanggal dan jam layanan.');
     }
@@ -127,6 +182,8 @@ export default function BookingPage() {
     if (!nama.trim()) {
       return setErrorMsg('Isi nama lengkap Anda.');
     }
+    const hairCuts = selectedServices.filter((s) => s.kat === 'Hair Cut');
+    if (!hairCuts.length) return setErrorMsg('Pilih minimal satu layanan Hair Cut.');
     const cleanWa = normWa(wa);
     if (!cleanWa) {
       return setErrorMsg('Nomor WhatsApp tidak valid (contoh: 08123456789).');
@@ -136,6 +193,7 @@ export default function BookingPage() {
     try {
       const { data, error } = await supabase.rpc('buat_booking', {
         p_svc_ids: selectedSvcIds,
+        p_people_count: peopleCount,
         p_tanggal: tanggal,
         p_jam: jam,
         p_kap_id: kapId,
@@ -155,6 +213,7 @@ export default function BookingPage() {
   const resetForm = () => {
     setDoneBooking(null);
     setSelectedSvcIds([]);
+    setPeopleCount(1);
     setTanggal(today);
     clearBookingDate();
     setJam('');
@@ -222,40 +281,72 @@ export default function BookingPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
+          <div className="card booking-summary">
+            <b>Ringkasan Booking</b>
+            <div className="mu">Layanan: {selectedMain.map((s) => s.nama).join(', ') || 'Belum dipilih'}</div>
+            {selectedExtras.length > 0 && <div className="mu">Extra: {selectedExtras.map((s) => s.nama).join(', ')}</div>}
+            {selectedProducts.length > 0 && <div className="mu">Produk: {selectedProducts.map((s) => s.nama).join(', ')}</div>}
+            <strong>{rp(totalHarga)}</strong>
+          </div>
           <div className="card">
             <h2>1. Pilih Layanan</h2>
             {services.length === 0 ? (
               <p className="mu">Belum ada daftar layanan tersedia.</p>
             ) : (
               <div className="grid">
-                {services.map((s) => {
-                  const isOn = selectedSvcIds.includes(s.id);
+                {mainServices.map((s) => {
+                  const selectedCount = selectedSvcIds.filter((id) => id === s.id).length;
+                  const isOn = selectedCount > 0;
                   return (
-                    <button
-                      type="button"
+                    <div
                       key={s.id}
                       className={`svc ${isOn ? 'on' : ''}`}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => toggleService(s.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleService(s.id); } }}
                     >
                       <b>{s.nama}</b>
                       <span>
                         {rp(s.harga)} · {s.kat}
                       </span>
-                    </button>
+                      {s.kat === 'Hair Cut' && peopleCount > 1 && selectedCount > 0 && (
+                        <span className="q" onClick={(e) => e.stopPropagation()}>
+                          <button type="button" aria-label={`Kurangi ${s.nama}`} onClick={() => changeHairCutQty(s.id, -1)}>−</button>
+                          {selectedCount}
+                          <button type="button" aria-label={`Tambah ${s.nama}`} onClick={() => changeHairCutQty(s.id, 1)}>+</button>
+                        </span>
+                      )}
+                    </div>
                   );
                 })}
               </div>
             )}
-            {selectedServices.length > 0 && (
+            {selectedMain.length > 0 && (
               <div className="row" style={{ marginTop: 10 }}>
-                <span>{selectedServices.length} layanan dipilih</span>
-                <b className="tot">{rp(totalHarga)}</b>
+                <span>{selectedMain.length} layanan utama dipilih</span>
+                <b className="tot">{rp(selectedMain.reduce((sum, s) => sum + s.harga, 0))}</b>
               </div>
             )}
           </div>
 
+          {selectedMain.length > 0 && <>
+            <div className="card">
+              <h2>Extra Service (opsional)</h2>
+              {extraServices.length ? <div className="grid">{extraServices.map((s) => <div key={s.id} className={`svc ${selectedSvcIds.includes(s.id) ? 'on' : ''}`} role="button" tabIndex={0} onClick={() => toggleService(s.id)}><b>{s.nama}</b><span>{rp(s.harga)}</span></div>)}</div> : <p className="mu">Belum ada extra service.</p>}
+            </div>
+            <div className="card">
+              <h2>Produk (opsional)</h2>
+              {products.length ? <div className="grid">{products.map((s) => <div key={s.id} className={`svc ${selectedSvcIds.includes(s.id) ? 'on' : ''}`} role="button" tabIndex={0} onClick={() => toggleService(s.id)}><b>{s.nama}</b><span>{rp(s.harga)}</span></div>)}</div> : <p className="mu">Belum ada produk.</p>}
+            </div>
+          </>}
+
           <div className="card">
-            <h2>2. Pilih Tanggal &amp; Jam</h2>
+            <h2>2. Jumlah Orang &amp; Jadwal</h2>
+            <label>Jumlah orang</label>
+            <div className="q"><button type="button" onClick={() => changePeopleCount(peopleCount - 1)}>−</button><b>{peopleCount}</b><button type="button" onClick={() => changePeopleCount(peopleCount + 1)}>+</button></div>
+            <p className="mu">Hair Cut akan dihitung untuk setiap orang.</p>
+            <h2>Pilih Tanggal &amp; Jam</h2>
             <label>Tanggal Kedatangan</label>
             <input
               type="date"
