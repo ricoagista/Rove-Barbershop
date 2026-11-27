@@ -66,6 +66,7 @@ function MainRouter() {
       <div className="wrap">
         <TopBar onSelectTab={handleTabChange} />
 
+        <main>
         {tab === 'kasir' && (
           <CashierPage
             externalReceipt={reprintReceipt}
@@ -80,6 +81,7 @@ function MainRouter() {
         {tab === 'akun' && isOwner && <AccountManagePage />}
         {tab === 'pengaturan' && isOwner && <SettingsPage />}
         {tab === 'laporan' && isOwner && <ReportPage onReprint={handleReprint} />}
+        </main>
       </div>
     );
   }

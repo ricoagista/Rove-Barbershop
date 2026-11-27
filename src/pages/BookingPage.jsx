@@ -111,7 +111,7 @@ export default function BookingPage() {
   };
 
   const changePeopleCount = (nextCount) => {
-    const next = Math.max(1, nextCount);
+    const next = Math.min(5, Math.max(1, nextCount));
     setPeopleCount(next);
     if (next >= peopleCount) return;
     setSelectedSvcIds((prev) => {
@@ -343,18 +343,24 @@ export default function BookingPage() {
 
           <div className="card">
             <h2>2. Jumlah Orang &amp; Jadwal</h2>
-            <label>Jumlah orang</label>
-            <div className="q"><button type="button" onClick={() => changePeopleCount(peopleCount - 1)}>−</button><b>{peopleCount}</b><button type="button" onClick={() => changePeopleCount(peopleCount + 1)}>+</button></div>
+            <label htmlFor="people-count">Jumlah orang</label>
+            <div className="q" aria-labelledby="people-count">
+              <button type="button" aria-label="Kurangi jumlah orang" disabled={peopleCount <= 1} onClick={() => changePeopleCount(peopleCount - 1)}>−</button>
+              <b id="people-count" aria-live="polite">{peopleCount}</b>
+              <button type="button" aria-label="Tambah jumlah orang" disabled={peopleCount >= 5} onClick={() => changePeopleCount(peopleCount + 1)}>+</button>
+            </div>
             <p className="mu">Hair Cut akan dihitung untuk setiap orang.</p>
             <h2>Pilih Tanggal &amp; Jam</h2>
-            <label>Tanggal Kedatangan</label>
+            <label htmlFor="booking-date">Tanggal Kedatangan</label>
             <input
+              id="booking-date"
               type="date"
               min={today}
               value={tanggal}
               onChange={(e) => handleDateChange(e.target.value)}
             />
-            <label>Jam Layanan (WIB)</label>
+            <label id="booking-time-label">Jam Layanan (WIB)</label>
+            {!timeSlots.some((slot) => isSlotAllowed(tanggal, slot)) && <p className="mu">Tidak ada slot tersedia minimal 60 menit dari sekarang. Silakan pilih tanggal lain.</p>}
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', marginTop: 6 }}>
               {timeSlots.map((slot) => {
                 const allowed = isSlotAllowed(tanggal, slot);
@@ -363,6 +369,7 @@ export default function BookingPage() {
                   <button
                     type="button"
                     key={slot}
+                    aria-describedby="booking-time-label"
                     className={`${jam === slot ? 'on' : ''} ${full ? 'unavailable' : ''}`}
                     disabled={!allowed || full}
                     aria-label={`${slot}${full ? ', penuh' : ''}`}
