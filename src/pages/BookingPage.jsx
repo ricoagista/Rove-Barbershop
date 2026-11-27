@@ -186,7 +186,7 @@ export default function BookingPage() {
       return setErrorMsg('Pilih minimal satu layanan.');
     }
     if (selectedHairCutCount !== peopleCount) {
-      return setErrorMsg(`Jumlah Hair Cut harus sama dengan jumlah orang (${peopleCount}).`);
+      return setErrorMsg(`Hair Cut belum lengkap: ${selectedHairCutCount} dari ${peopleCount} orang`);
     }
     if (!tanggal || !jam) {
       return setErrorMsg('Pilih tanggal dan jam layanan.');
