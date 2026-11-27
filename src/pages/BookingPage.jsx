@@ -300,7 +300,7 @@ export default function BookingPage() {
             <strong>{rp(totalHarga)}</strong>
           </div>
           <div className="card">
-            <h2>1. Jumlah Orang</h2>
+            <h2>Jumlah Orang</h2>
             <p className="mu">Pilih jumlah orang yang akan datang.</p>
             <div className="q" aria-labelledby="people-count-top">
               <button type="button" aria-label="Kurangi jumlah orang" disabled={peopleCount <= 1} onClick={() => changePeopleCount(peopleCount - 1)}>−</button>
@@ -310,7 +310,7 @@ export default function BookingPage() {
           </div>
 
           <div className="card">
-            <h2>2. Pilih Layanan</h2>
+            <h2>Pilih Layanan</h2>
             {services.length === 0 ? (
               <p className="mu">Belum ada daftar layanan tersedia.</p>
             ) : (
@@ -359,7 +359,7 @@ export default function BookingPage() {
           )}
 
           <div className="card">
-            <h2>3. Pilih Jadwal</h2>
+            <h2>Pilih Jadwal</h2>
             <p className="mu">Hair Cut akan dihitung untuk setiap orang.</p>
             <h2>Pilih Tanggal &amp; Jam</h2>
             <label htmlFor="booking-date">Tanggal Kedatangan</label>
@@ -394,7 +394,7 @@ export default function BookingPage() {
           </div>
 
           <div className="card">
-            <h2>4. Pilih Capster</h2>
+            <h2>Pilih Capster</h2>
             {!jam ? (
               <p className="mu">Pilih tanggal dan jam terlebih dahulu untuk melihat ketersediaan capster.</p>
             ) : capsters.length === 0 ? (
@@ -426,7 +426,7 @@ export default function BookingPage() {
           </div>
 
           <div className="card">
-            <h2>5. Data Pemesan</h2>
+            <h2>Data Pemesan</h2>
             <label>Nama Lengkap</label>
             <input
               type="text"
