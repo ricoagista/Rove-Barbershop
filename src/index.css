@@ -665,6 +665,11 @@ th, td {
   font-weight: 600;
 }
 
+#nota,
+#nota * {
+  font-size: 10px;
+}
+
 #nota .nc > div:last-child {
   margin-top: 4px;
   font-weight: 700;
