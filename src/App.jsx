@@ -87,7 +87,7 @@ function MainRouter() {
   }
 
   // Area Publik (Tanpa Login)
-  if (view === 'login') {
+  if (window.location.pathname === '/login') {
     return <LoginPage />;
   }
 

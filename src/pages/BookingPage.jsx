@@ -30,7 +30,6 @@ export default function BookingPage() {
     services,
     capsters,
     bookedSlots,
-    setView,
     refreshAll,
   } = useApp();
 
@@ -245,11 +244,6 @@ export default function BookingPage() {
     <div className="wrap">
       <div className="hb">
         <img className="hl" src="/logo.jpeg" alt={brand.nama} />
-        <div className="hr">
-          <button className="ghost" onClick={() => setView('login')}>
-            Login Staf
-          </button>
-        </div>
       </div>
 
       <h1 className="ht">Book Your Session Now</h1>
