@@ -171,6 +171,7 @@ export default function BookingPage() {
   const extraServices = services.filter((s) => s.kat === 'Extra Service');
   const selectedMain = selectedServices.filter((s) => !s.kat || s.kat === 'Hair Cut');
   const selectedExtras = selectedServices.filter((s) => s.kat === 'Extra Service');
+  const selectedHairCutCount = selectedServices.filter((s) => s.kat === 'Hair Cut').length;
   const totalHarga = selectedServices.reduce((sum, s) => sum + s.harga, 0);
   const policyLines = String(brand.pol || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
@@ -184,9 +185,8 @@ export default function BookingPage() {
     if (!selectedSvcIds.length) {
       return setErrorMsg('Pilih minimal satu layanan.');
     }
-    const selectedHairCutCount = selectedServices.filter((s) => s.kat === 'Hair Cut').length;
     if (selectedHairCutCount !== peopleCount) {
-      return setErrorMsg(`Jumlah Hair Cut harus sama dengan jumlah orang ${peopleCount}.`);
+      return setErrorMsg(`Jumlah Hair Cut harus sama dengan jumlah orang (${peopleCount}).`);
     }
     if (!tanggal || !jam) {
       return setErrorMsg('Pilih tanggal dan jam layanan.');
@@ -445,6 +445,11 @@ export default function BookingPage() {
 
           <div className="card booking-summary">
             <b>Ringkasan Booking</b>
+            {selectedHairCutCount !== peopleCount && (
+              <div className="err booking-error" role="alert">
+                Hair Cut belum lengkap: {selectedHairCutCount} dari {peopleCount} orang
+              </div>
+            )}
             {errorMsg && <div className="err booking-error" role="alert">{errorMsg}</div>}
             <div className="mu">Layanan: {selectedMain.map((s) => s.nama).join(', ') || 'Belum dipilih'}</div>
             {selectedExtras.length > 0 && <div className="mu">Extra: {selectedExtras.map((s) => s.nama).join(', ')}</div>}
