@@ -133,7 +133,17 @@ export default function ReportPage({ onReprint }) {
     setEditPelanggan(s.pelanggan || '');
     setEditWa(s.wa || '');
     setEditMetode(s.metode || 'Tunai');
-    setEditItems((s.items || []).map((item) => ({ ...item })));
+    setEditItems((Array.isArray(s.items) ? s.items : []).map((item) => {
+      const service = services.find((svc) => svc.id === item.id || svc.nama === item.nama);
+      return {
+        ...item,
+        id: item.id || service?.id,
+        nama: item.nama || service?.nama || 'Layanan tidak diketahui',
+        harga: Number(item.harga ?? service?.harga) || 0,
+        qty: Number(item.qty) || 0,
+        kat: item.kat || service?.kat,
+      };
+    }));
     setEditTotal(String(s.total || 0));
     setEditErr('');
   };
