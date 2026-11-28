@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { normWa } from '../utils/format';
+import { normWa, roleName } from '../utils/format';
 import { processSquareAvatar } from '../utils/media';
 import { supabase } from '../lib/supabase';
 
@@ -66,7 +66,7 @@ export default function ProfilePage() {
         <h1>Profil Saya</h1>
         <div className="profile-identity">
           <b>{me.name}</b>
-          <span>@{me.username}</span>
+          <span>@{me.username} · {roleName(me.role)}</span>
         </div>
         {error && <p className="err">{error}</p>}
         {message && <p className="ok">{message}</p>}
