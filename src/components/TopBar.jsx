@@ -79,7 +79,7 @@ export default function TopBar({ onSelectTab }) {
           {me.photo_url ? <img className="top-user-avatar" src={me.photo_url} alt="" /> : <span className="top-user-fallback" aria-hidden="true">{icons.profile}</span>}
           <div>
             <strong>Hai! {me.name}</strong>
-            <span>{roleName(me.role)}</span>
+            <span>{roleName(me.role)} · Siap melayani</span>
           </div>
         </div>
         <button className={`shift-button ${isServiceOpen ? 'close' : 'open'}`} disabled={shiftBusy} onClick={handleShift}>
