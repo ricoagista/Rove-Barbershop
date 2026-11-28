@@ -281,14 +281,25 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           activeBookings.length ? (
             <div className="booking-picker">
               <label htmlFor="cashier-booking">Pilih reservasi *</label>
-              <select id="cashier-booking" value={bkId} onChange={(e) => handlePickBooking(e.target.value)}>
-                <option value="">Pilih nama atau jadwal reservasi</option>
+              <div className="booking-options" role="listbox" aria-label="Daftar reservasi aktif">
                 {activeBookings.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.tanggal} · {b.jam} · {b.nama}
-                  </option>
+                  <button
+                    key={b.id}
+                    type="button"
+                    role="option"
+                    aria-selected={bkId === b.id}
+                    className={`booking-option ${bkId === b.id ? 'selected' : ''}`}
+                    onClick={() => handlePickBooking(b.id)}
+                  >
+                    <span className="booking-option-time">{b.jam}</span>
+                    <span className="booking-option-info">
+                      <strong>{b.nama}</strong>
+                      <span>{b.tanggal} · {b.svc_nama}</span>
+                    </span>
+                    <span className="booking-option-status">{bkId === b.id ? 'Dipilih' : 'Pilih'}</span>
+                  </button>
                 ))}
-              </select>
+              </div>
               {pickedBooking ? (
                 <div className="booking-picked">
                   <strong>{pickedBooking.nama}</strong>

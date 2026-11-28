@@ -107,6 +107,64 @@ h2 {
   font-weight: 600;
 }
 
+.booking-options {
+  display: grid;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.booking-option {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--tx);
+}
+
+.booking-option:hover,
+.booking-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft, var(--surface-2));
+}
+
+.booking-option-time {
+  color: var(--accent-text);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.booking-option-info {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.booking-option-info strong,
+.booking-option-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-option-info span,
+.booking-option-status {
+  color: var(--mu);
+  font-size: 12px;
+}
+
+.booking-option-status {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
 .booking-picked {
   display: grid;
   gap: 2px;
