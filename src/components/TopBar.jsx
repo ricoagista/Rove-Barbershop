@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { roleName } from '../utils/format';
 
 export default function TopBar({ onSelectTab }) {
   const {
     me,
-    brand,
     tab,
     setTab,
-    logout,
     newBkCount,
     setNewBkCount,
   } = useApp();
@@ -47,11 +44,6 @@ export default function TopBar({ onSelectTab }) {
 
   return (
     <>
-      <div className="bar">
-        <div className="t"><b>{brand.nama}</b><span>Panel staf</span></div>
-        <button type="button" className="profile-link" onClick={() => handleTabChange('profile')}>{me.name} · {roleName(me.role)}</button>
-      </div>
-
       <button className="menu-toggle" type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
         {menuOpen ? 'Tutup menu' : 'Menu'}
       </button>

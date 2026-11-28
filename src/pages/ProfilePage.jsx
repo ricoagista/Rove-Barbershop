@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { roleName } from '../utils/format';
+import { roleName, normWa } from '../utils/format';
+import { supabase } from '../lib/supabase';
 
 export default function ProfilePage() {
-  const { me, brand, isServiceOpen, openService, closeService, logout } = useApp();
+  const { me, isServiceOpen, openService, closeService, logout, refreshAll } = useApp();
   const [confirmClose, setConfirmClose] = useState(false);
+  const [form, setForm] = useState({ name: me?.name || '', wa: me?.wa || '', photo_url: me?.photo_url || '' });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -12,6 +17,24 @@ export default function ProfilePage() {
     const timer = setTimeout(() => setConfirmClose(false), 4000);
     return () => clearTimeout(timer);
   }, [confirmClose]);
+
+  useEffect(() => {
+    setForm({ name: me?.name || '', wa: me?.wa || '', photo_url: me?.photo_url || '' });
+  }, [me]);
+
+  const saveProfile = async (e) => {
+    e.preventDefault();
+    const name = form.name.trim();
+    if (!name) return setError('Nama wajib diisi.');
+    setSaving(true); setError(''); setMessage('');
+    try {
+      const { error: saveError } = await supabase.from('profiles').update({ name, wa: form.wa.trim() ? normWa(form.wa) || form.wa.trim() : '', photo_url: form.photo_url.trim() }).eq('id', me.id);
+      if (saveError) throw saveError;
+      await refreshAll();
+      setMessage('Profil berhasil disimpan.');
+    } catch (ex) { setError(ex?.message || 'Gagal menyimpan profil.'); }
+    finally { setSaving(false); }
+  };
 
   const handleShift = async () => {
     if (busy) return;
@@ -28,13 +51,19 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <div className="card profile-card">
-        <img className="profile-card-logo" src="/logo.jpeg" alt="Logo" />
-        <h1>{brand.nama}</h1>
-        {brand.jargon && <p className="sub">{brand.jargon}</p>}
+        <h1>Profil Saya</h1>
         <div className="profile-identity">
           <b>{me.name}</b>
-          <span>{roleName(me.role)}</span>
+          <span>{roleName(me.role)} · @{me.username}</span>
         </div>
+        {error && <p className="err">{error}</p>}
+        {message && <p className="ok">{message}</p>}
+        <form onSubmit={saveProfile}>
+          <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} /></label>
+          <label>Nomor WhatsApp<input value={form.wa} onChange={(e) => setForm({ ...form, wa: e.target.value })} inputMode="tel" maxLength={20} /></label>
+          <label>URL foto profil<input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} type="url" placeholder="https://..." /></label>
+          <button className="p" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Profil'}</button>
+        </form>
         <div className="profile-actions">
           <button className={isServiceOpen ? 'cl' : 'ok'} disabled={busy} onClick={handleShift}>
             {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
