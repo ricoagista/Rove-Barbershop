@@ -206,7 +206,7 @@ h2 {
 }
 
 .payment-hint {
-  margin: 12px 0;
+  margin: 16px 0;
   color: var(--info);
   border: 1px solid color-mix(in srgb, var(--info) 45%, var(--border));
   background: color-mix(in srgb, var(--info) 10%, var(--surface));
@@ -1056,6 +1056,21 @@ th, td {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.payment-section {
+  display: grid;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.payment-section label {
+  color: var(--tx);
+  font-weight: 600;
+}
+
+.payment-methods {
+  margin: 0;
 }
 
 .payment-methods button {

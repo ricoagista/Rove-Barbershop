@@ -412,17 +412,19 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           </>
         )}
 
-        <label>Metode bayar *</label>
-        <div className="two payment-methods" style={{ marginBottom: 10 }}>
-          {['Tunai', 'QRIS'].map((m) => (
-            <button
-              key={m}
-              className={metode === m ? 'on' : ''}
-              onClick={() => setMetode(m)}
-            >
-              {m}
-            </button>
-          ))}
+        <div className="payment-section">
+          <label>Metode bayar</label>
+          <div className="two payment-methods">
+            {['Tunai', 'QRIS'].map((m) => (
+              <button
+                key={m}
+                className={metode === m ? 'on' : ''}
+                onClick={() => setMetode(m)}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
         </div>
 
         {subtotal > 0 && total === 0 ? (
