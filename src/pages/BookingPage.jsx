@@ -274,7 +274,7 @@ export default function BookingPage() {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form className="booking-form" onSubmit={handleSubmit}>
           <div className="card">
             <h2>Jumlah Orang</h2>
             <div className="q" aria-labelledby="people-count-top">

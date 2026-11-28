@@ -87,10 +87,20 @@ h2 {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 26px;
-  padding: 18px;
+  border-radius: 20px;
+  padding: 16px;
   margin-bottom: 12px;
   box-shadow: none;
+}
+
+.booking-form {
+  display: grid;
+  gap: 12px;
+}
+
+.booking-form > .card,
+.booking-form > .extra-sheet {
+  margin: 0;
 }
 
 .tabs {
@@ -222,7 +232,7 @@ label {
 }
 
 .extra-sheet {
-  margin: 12px 0;
+  margin: 0;
   padding: 16px;
   background: var(--surface-2);
   border: 1px solid var(--accent);
