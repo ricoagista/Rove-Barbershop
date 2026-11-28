@@ -19,6 +19,7 @@ export function AppProvider({ children }) {
   const [promos, setPromos] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [sales, setSales] = useState([]);
+  const [salesEditHistory, setSalesEditHistory] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [shifts, setShifts] = useState([]);
   const [settings, setSettings] = useState({});
@@ -58,11 +59,12 @@ export function AppProvider({ children }) {
   // 2. Fetch data staf (setelah login)
   const loadStaffData = useCallback(async (uid) => {
     if (!supabase || !uid) return;
-    const [profRes, proRes, bkRes, salRes, expRes, shfRes, settingsRes] = await Promise.all([
+    const [profRes, proRes, bkRes, salRes, auditRes, expRes, shfRes, settingsRes] = await Promise.all([
       supabase.from('profiles').select('*').order('created_at', { ascending: true }),
       supabase.from('promos').select('*').order('created_at', { ascending: true }),
       supabase.from('bookings').select('*').order('tanggal', { ascending: true }),
       supabase.from('sales').select('*').order('ts', { ascending: false }),
+      supabase.from('sales_edit_history').select('*').order('edited_at', { ascending: false }),
       supabase.from('expenses').select('*').order('ts', { ascending: false }),
       supabase.from('shifts').select('*'),
       supabase.from('settings').select('*'),
@@ -92,6 +94,7 @@ export function AppProvider({ children }) {
       }
     }
     if (salRes.data) setSales(salRes.data);
+    if (auditRes.data) setSalesEditHistory(auditRes.data);
     if (expRes.data) setExpenses(expRes.data);
     if (shfRes.data) setShifts(shfRes.data);
     if (settingsRes.data) {
@@ -289,6 +292,7 @@ export function AppProvider({ children }) {
         promos,
         bookings,
         sales,
+        salesEditHistory,
         expenses,
         shifts,
         settings,

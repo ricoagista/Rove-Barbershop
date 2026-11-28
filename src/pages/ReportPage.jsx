@@ -13,7 +13,7 @@ import {
 } from '../utils/format';
 
 export default function ReportPage({ onReprint }) {
-  const { me, sales, expenses, services, capsters, brand, kontak, refreshAll } = useApp();
+  const { me, sales, salesEditHistory, expenses, services, capsters, brand, kontak, refreshAll } = useApp();
 
   const [per, setPer] = useState('harian'); // 'harian' | 'minggu' | 'bulan' | 'custom'
   const [refDate, setRefDate] = useState(ld());
@@ -32,6 +32,7 @@ export default function ReportPage({ onReprint }) {
   const [editTotal, setEditTotal] = useState('');
   const [editErr, setEditErr] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [historySale, setHistorySale] = useState(null);
 
   const activeRange = useMemo(() => {
     if (per === 'custom') {
@@ -393,6 +394,21 @@ export default function ReportPage({ onReprint }) {
         </div>
       )}
 
+      {historySale && (
+        <div className="card">
+          <h2>Riwayat Edit {historySale.nomor}</h2>
+          {salesEditHistory.filter((item) => item.sale_id === historySale.id).map((item) => (
+            <div key={item.id} className="card">
+              <b>{item.edited_by_name}</b> · {tstr(item.edited_at)}
+              <div className="row"><span>Sebelum</span><span>{formatSaleItems(item.before_data?.items)}</span></div>
+              <div className="row"><span>Sesudah</span><span>{formatSaleItems(item.after_data?.items)}</span></div>
+              <div className="row"><span>Total</span><span>{rp(item.before_data?.total)} → {rp(item.after_data?.total)}</span></div>
+            </div>
+          ))}
+          <button type="button" onClick={() => setHistorySale(null)}>Tutup riwayat</button>
+        </div>
+      )}
+
       {editingTrx && (
         <div className="card">
           <h2>Edit Transaksi ({editingTrx.nomor})</h2>
@@ -488,7 +504,12 @@ export default function ReportPage({ onReprint }) {
                   <td>{s.metode}</td>
                   <td>{rp(s.total)}</td>
                   <td className="mu">
-                    {s.edit_ts ? `Diedit ${tstr(s.edit_ts)} oleh ${s.edit_oleh || 'staf tidak diketahui'}` : 'Belum diedit'}
+                    {s.edit_ts ? (
+                      <>
+                        <div>Diedit {tstr(s.edit_ts)} oleh {s.edit_oleh || 'staf tidak diketahui'}</div>
+                        <button type="button" onClick={() => setHistorySale(s)}>Lihat riwayat</button>
+                      </>
+                    ) : 'Belum diedit'}
                   </td>
                   <td>
                     <button
