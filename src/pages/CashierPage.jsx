@@ -308,13 +308,13 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
                       <span>{b.tanggal} · {b.svc_nama}</span>
                     </span>
                     <span className={`booking-option-status ${me.role === 'capster' && b.kap_id !== me.id ? 'booking-warning' : ''}`}>
-                      {bkId === b.id ? 'Dipilih' : me.role === 'capster' && b.kap_id !== me.id ? 'Bukan untuk Anda' : 'Pilih'}
+                      {me.role === 'capster' && b.kap_id !== me.id ? <><span className="warning-icon" aria-hidden="true">!</span>Bukan untuk Anda</> : bkId === b.id ? 'Dipilih' : 'Pilih'}
                     </span>
                   </button>
                 ))}
               </div>
               {pickedBooking && me.role === 'capster' && pickedBooking.kap_id !== me.id ? (
-                <p className="booking-warning-message">Reservasi ini ditujukan untuk {pickedBooking.kap_nama || 'capster lain'}. Pastikan pergantian capster sudah disetujui.</p>
+                <p className="booking-warning-message"><span className="warning-icon" aria-hidden="true">!</span>Reservasi ini ditujukan untuk {pickedBooking.kap_nama || 'capster lain'}. Pastikan pergantian capster sudah disetujui.</p>
               ) : !pickedBooking ? <p className="booking-picker-hint">Pilih reservasi untuk mengisi pelanggan dan layanan secara otomatis.</p> : null}
             </div>
           ) : <p className="mu">Belum ada reservasi aktif.</p>

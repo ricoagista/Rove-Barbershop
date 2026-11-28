@@ -177,12 +177,30 @@ h2 {
 
 .booking-warning,
 .booking-warning-message {
-  color: var(--warning);
+  color: var(--danger);
+  font-weight: 700;
 }
 
 .booking-warning-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin: 0;
   font-size: 13px;
+}
+
+.warning-icon {
+  display: inline-flex;
+  flex: 0 0 16px;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
 }
 
 .booking-picked {
