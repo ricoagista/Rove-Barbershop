@@ -532,14 +532,18 @@ label {
   }
 
   .bar {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
     border-radius: 16px;
     padding: 10px;
-    gap: 8px;
+    gap: 8px 10px;
   }
 
   .bar .t {
     min-width: 0;
-    flex: 1 1 calc(100% - 62px);
+    width: auto;
+    flex: none;
+    align-self: center;
   }
 
   .bar .t b,
@@ -564,7 +568,9 @@ label {
 
   .bar > button:first-of-type {
     order: 3;
-    flex: 1 1 48%;
+    grid-column: 1;
+    flex: none;
+    width: 100%;
   }
 
   .bar > button:first-of-type,
@@ -574,7 +580,9 @@ label {
 
   .bar > button:last-of-type {
     order: 4;
-    flex: 1 1 40%;
+    grid-column: 2;
+    flex: none;
+    width: 100%;
   }
 
   table {
