@@ -93,6 +93,18 @@ h2 {
   box-shadow: none;
 }
 
+.profile-avatar-preview {
+  display: block;
+  width: 160px;
+  height: 160px;
+  max-width: 100%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  margin: 8px 0 16px;
+}
+
 .booking-form {
   display: grid;
   gap: 12px;
@@ -696,12 +708,9 @@ label {
   }
 
   .profile-avatar-preview {
-    display: block;
-    width: 96px;
-    height: 96px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin: 4px 0 12px;
+    width: 112px;
+    height: 112px;
+    margin: 8px 0 16px;
   }
 
   .profile-section {
