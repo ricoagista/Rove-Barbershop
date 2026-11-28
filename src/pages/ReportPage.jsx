@@ -466,6 +466,7 @@ export default function ReportPage({ onReprint }) {
               <th>Capster</th>
               <th>Metode</th>
               <th>Total</th>
+              <th>Audit</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -484,6 +485,9 @@ export default function ReportPage({ onReprint }) {
                   <td>{s.capster_nama}</td>
                   <td>{s.metode}</td>
                   <td>{rp(s.total)}</td>
+                  <td className="mu">
+                    {s.edit_ts ? `Diedit ${tstr(s.edit_ts)} oleh ${s.edit_oleh || 'staf tidak diketahui'}` : 'Belum diedit'}
+                  </td>
                   <td>
                     <button
                       style={{ padding: '4px 10px' }}
@@ -509,7 +513,7 @@ export default function ReportPage({ onReprint }) {
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="mu">
+                <td colSpan={10} className="mu">
                   Belum ada transaksi pada periode ini.
                 </td>
               </tr>
