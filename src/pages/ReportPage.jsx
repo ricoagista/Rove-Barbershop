@@ -80,25 +80,21 @@ export default function ReportPage({ onReprint }) {
     .map((item) => `${item.nama} (${item.qty})`)
     .join(', ');
 
-  const auditValue = (value, field) => {
-    if (field === 'items') return formatSaleItems(value) || '-';
-    if (field === 'subtotal' || field === 'diskon' || field === 'total') return rp(value);
-    return value || '-';
-  };
-
-  const renderAuditField = (label, field, before, after) => {
-    const oldValue = auditValue(before?.[field], field);
-    const newValue = auditValue(after?.[field], field);
-    const changed = oldValue !== newValue;
-    return (
-      <div className={`audit-field ${changed ? 'changed' : ''}`} key={field}>
-        <span>{label}</span>
-        <div className="audit-values">
-          <b className={changed ? 'audit-old' : ''}>{oldValue}</b>
-          <b className={changed ? 'audit-new' : ''}>{newValue}</b>
-        </div>
-      </div>
-    );
+  const diffText = (before, after, side) => {
+    const oldText = String(before ?? '-');
+    const newText = String(after ?? '-');
+    if (oldText === newText) return oldText;
+    const from = side === 'before' ? oldText : newText;
+    const to = side === 'before' ? newText : oldText;
+    let start = 0;
+    while (start < from.length && start < to.length && from[start] === to[start]) start += 1;
+    let endFrom = from.length;
+    let endTo = to.length;
+    while (endFrom > start && endTo > start && from[endFrom - 1] === to[endTo - 1]) {
+      endFrom -= 1;
+      endTo -= 1;
+    }
+    return <>{from.slice(0, start)}<mark className={side === 'before' ? 'audit-old-mark' : 'audit-new-mark'}>{from.slice(start, endFrom) || '∅'}</mark>{from.slice(endFrom)}</>;
   };
 
   const stats = useMemo(() => {
@@ -429,11 +425,15 @@ export default function ReportPage({ onReprint }) {
                   {[['Sebelum', item.before_data], ['Sesudah', item.after_data]].map(([title, data]) => (
                     <div className="audit-column" key={title}>
                       <h3>{title}</h3>
-                      {[
-                        ['Pelanggan', 'pelanggan'], ['WhatsApp', 'wa'], ['Layanan', 'items'],
-                        ['Subtotal', 'subtotal'], ['Diskon', 'diskon'], ['Promo', 'promo'],
-                        ['Total', 'total'], ['Metode', 'metode'], ['Capster', 'capster_nama'],
-                      ].map(([label, field]) => renderAuditField(label, field, item.before_data, item.after_data))}
+                      <div className="row"><span>Pelanggan</span><b>{diffText(item.before_data?.pelanggan, item.after_data?.pelanggan, title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>WhatsApp</span><b>{diffText(item.before_data?.wa, item.after_data?.wa, title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Layanan</span><b>{diffText(formatSaleItems(item.before_data?.items), formatSaleItems(item.after_data?.items), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Subtotal</span><b>{diffText(rp(item.before_data?.subtotal), rp(item.after_data?.subtotal), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Diskon</span><b>{diffText(rp(item.before_data?.diskon), rp(item.after_data?.diskon), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Promo</span><b>{diffText(item.before_data?.promo, item.after_data?.promo, title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Total</span><b>{diffText(rp(item.before_data?.total), rp(item.after_data?.total), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Metode</span><b>{diffText(item.before_data?.metode, item.after_data?.metode, title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Capster</span><b>{diffText(item.before_data?.capster_nama, item.after_data?.capster_nama, title === 'Sebelum' ? 'before' : 'after')}</b></div>
                     </div>
                   ))}
                 </div>

@@ -328,41 +328,20 @@ label {
   margin-top: 0;
 }
 
-.audit-field {
-  border-bottom: 1px solid var(--line);
-  padding: 6px 0;
+.audit-old-mark,
+.audit-new-mark {
+  padding: 0 1px;
+  border-radius: 2px;
 }
 
-.audit-field > span {
-  display: block;
-  color: var(--mu);
-  font-size: 12px;
+.audit-old-mark {
+  color: #8a1c1c;
+  background: #f7caca;
 }
 
-.audit-values {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.audit-values b {
-  overflow-wrap: anywhere;
-}
-
-.audit-field.changed .audit-old {
-  color: #b3261e;
-}
-
-.audit-field.changed .audit-new {
-  color: #1f7a45;
-}
-
-.audit-field.changed .audit-old::before {
-  content: '− ';
-}
-
-.audit-field.changed .audit-new::before {
-  content: '+ ';
+.audit-new-mark {
+  color: #14532d;
+  background: #bce8c8;
 }
 
 @media (max-width: 640px) {
