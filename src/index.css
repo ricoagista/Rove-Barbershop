@@ -159,12 +159,41 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 10px;
+  padding: 4px 0;
 }
 
-.top-shift-bar button {
+.top-user-info {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.top-user-info strong,
+.top-user-info span {
+  overflow-wrap: anywhere;
+}
+
+.top-user-info span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.shift-button {
+  flex: 0 0 auto;
   min-height: 44px;
+  min-width: 116px;
+  border: 1px solid transparent;
+  color: #fff;
+}
+
+.shift-button.open {
+  background: var(--ok);
+}
+
+.shift-button.close {
+  background: var(--bad);
 }
 
 .menu-toggle {
@@ -635,8 +664,18 @@ label {
     margin-bottom: 8px;
   }
 
-  .top-shift-bar button {
-    flex: 0 0 auto;
+  .top-shift-bar {
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .top-user-info {
+    flex: 1 1 auto;
+  }
+
+  .shift-button {
+    min-width: 108px;
+    padding-inline: 10px;
   }
 
   .menu-toggle {
