@@ -32,14 +32,13 @@ export default function AccountManagePage() {
   // Edit profil staf
   const [editUser, setEditUser] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
-  const [resetSaving, setResetSaving] = useState(false);
-  const [resetMsg, setResetMsg] = useState('');
 
   // Ganti password sendiri
   const [newPass, setNewPass] = useState('');
   const [passMsg, setPassMsg] = useState('');
   const [passErr, setPassErr] = useState('');
   const [passSaving, setPassSaving] = useState(false);
+  const [editError, setEditError] = useState('');
 
   const handlePhotoUpload = async (file, isEdit = false) => {
     if (!file) return;
@@ -133,19 +132,19 @@ export default function AccountManagePage() {
   const handleSaveEditUser = async (e) => {
     e.preventDefault();
     if (!editUser) return;
-    const cleanUsername = slug(editUser.username);
-    if (!cleanUsername) return setResetMsg('Username wajib diisi.');
-    if (profiles.some((p) => p.id !== editUser.id && p.username === cleanUsername)) {
-      return setResetMsg('Username sudah dipakai.');
-    }
+    setEditError('');
+    const cleanUser = slug(editUser.username);
+    if (!['kasir', 'capster'].includes(editUser.role)) return setEditError('Form ini hanya untuk akun Kasir atau Capster.');
+    if (!cleanUser) return setEditError('Username wajib diisi.');
+    if (profiles.some((p) => p.id !== editUser.id && p.username === cleanUser)) return setEditError('Username sudah dipakai.');
+    if (editUser.newPassword && editUser.newPassword.length < 6) return setEditError('Password baru minimal 6 karakter.');
     setEditSaving(true);
-    setResetMsg('');
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
+          username: cleanUser,
           name: editUser.name.trim(),
-          username: cleanUsername,
           role: editUser.role,
           wa: editUser.wa ? normWa(editUser.wa) || editUser.wa : '',
           photo_url: editUser.role === 'capster' ? editUser.photo_url || '' : '',
@@ -163,31 +162,14 @@ export default function AccountManagePage() {
         })
         .eq('id', editUser.id);
       if (error) throw error;
+      const { error: authError } = await supabase.functions.invoke('admin-update-staff', {
+        body: { userId: editUser.id, username: cleanUser, password: editUser.newPassword || null },
+      });
+      if (authError) throw authError;
       setEditUser(null);
       await refreshAll();
     } finally {
       setEditSaving(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!editUser) return;
-    const newPassword = window.prompt(`Password baru untuk ${editUser.name} (minimal 6 karakter):`);
-    if (newPassword === null) return;
-    if (newPassword.length < 6) return setResetMsg('Password minimal 6 karakter.');
-    setResetSaving(true);
-    setResetMsg('');
-    try {
-      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
-        body: { user_id: editUser.id, password: newPassword },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      setResetMsg('Password akun berhasil direset.');
-    } catch (ex) {
-      setResetMsg(ex?.message || 'Gagal mereset password.');
-    } finally {
-      setResetSaving(false);
     }
   };
 
@@ -403,6 +385,7 @@ export default function AccountManagePage() {
         <div className="card">
           <h2>Edit Akun: {editUser.name} (@{editUser.username})</h2>
           <form onSubmit={handleSaveEditUser}>
+            {editError && <p className="err">{editError}</p>}
             <div className="two">
               <div>
                 <label>Nama</label>
@@ -416,9 +399,13 @@ export default function AccountManagePage() {
                 <input
                   value={editUser.username || ''}
                   onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
+                  maxLength={32}
                   autoComplete="username"
                 />
               </div>
+            </div>
+
+            <div className="two">
               <div>
                 <label>Peran</label>
                 <select
@@ -437,6 +424,20 @@ export default function AccountManagePage() {
               value={editUser.wa || ''}
               onChange={(e) => setEditUser({ ...editUser, wa: e.target.value })}
             />
+
+            <div className="profile-section account-password-section">
+              <h3>Password baru</h3>
+              <label>Password baru (opsional)
+                <input
+                  type="password"
+                  value={editUser.newPassword || ''}
+                  onChange={(e) => setEditUser({ ...editUser, newPassword: e.target.value })}
+                  minLength={6}
+                  autoComplete="new-password"
+                  placeholder="Kosongkan jika tidak diubah"
+                />
+              </label>
+            </div>
 
             {editUser.role === 'capster' && (
               <>
@@ -504,13 +505,9 @@ export default function AccountManagePage() {
               }
             />
 
-            {resetMsg && <p className={resetMsg.includes('berhasil') ? 'ok' : 'err'}>{resetMsg}</p>}
             <div className="two">
               <button type="submit" className="p" disabled={editSaving}>
                 {editSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </button>
-              <button type="button" onClick={handleResetPassword} disabled={resetSaving}>
-                {resetSaving ? 'Mereset...' : 'Reset Password'}
               </button>
               <button type="button" onClick={() => setEditUser(null)}>
                 Batal
