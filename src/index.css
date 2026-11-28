@@ -553,12 +553,20 @@ label {
 
   .bar .t b {
     line-height: 1.15;
-    margin-bottom: 3px;
+    margin-bottom: 1px;
   }
 
   .bar .t span {
     display: block;
-    line-height: 1.25;
+    line-height: 1.1;
+  }
+
+  .bar .t br {
+    display: none;
+  }
+
+  .bar .t span + span {
+    margin-top: 2px;
   }
 
   .bar > button {
