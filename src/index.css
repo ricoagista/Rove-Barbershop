@@ -376,7 +376,7 @@ h2 {
   flex: 0 0 40px;
   width: 40px;
   height: 40px;
-  border-radius: 999px;
+  border-radius: 12px;
 }
 
 .top-user-avatar {
@@ -450,7 +450,7 @@ h2 {
   min-height: 44px;
   padding: 9px 18px;
   white-space: nowrap;
-  border-radius: 999px;
+  border-radius: 12px;
 }
 
 .settings-tabs {
@@ -494,7 +494,7 @@ h2 {
 button {
   font: inherit;
   cursor: pointer;
-  border-radius: 999px;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--tx);
@@ -1133,7 +1133,7 @@ th, td {
 }
 
 .bar button {
-  border-radius: 999px;
+  border-radius: 12px;
   background: transparent;
   border: 1px solid var(--border);
   color: var(--tx);
@@ -1220,7 +1220,7 @@ th, td {
   color: #fff;
   text-decoration: none;
   padding: 9px 16px;
-  border-radius: 999px;
+  border-radius: 12px;
   font-weight: 600;
   font-size: 14px;
   display: inline-block;
@@ -1308,7 +1308,7 @@ th, td {
   max-width: 300px;
   padding: 10px 16px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 12px;
   color: var(--tx);
   text-decoration: none;
 }
