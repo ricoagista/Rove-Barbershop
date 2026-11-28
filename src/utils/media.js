@@ -87,6 +87,18 @@ export async function processSquareAvatar(file, size = 240, quality = 0.8) {
   return c.toDataURL('image/jpeg', quality);
 }
 
+export async function processExpenseImage(file, maxWidth = 1280, quality = 0.72) {
+  const im = await readImageFile(file);
+  const scale = Math.min(1, maxWidth / im.width);
+  const w = Math.max(1, Math.round(im.width * scale));
+  const h = Math.max(1, Math.round(im.height * scale));
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  c.getContext('2d').drawImage(im, 0, 0, w, h);
+  return c.toDataURL('image/jpeg', quality);
+}
+
 export async function processNotaImage(file) {
   const im = await readImageFile(file);
   let w = 384;

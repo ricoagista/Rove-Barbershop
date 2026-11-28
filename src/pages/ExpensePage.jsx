@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import { rp, ld, tstr } from '../utils/format';
+import { processExpenseImage } from '../utils/media';
 
 export default function ExpensePage() {
   const { me, expenses, isServiceOpen, refreshAll } = useApp();
@@ -13,6 +14,7 @@ export default function ExpensePage() {
   const [tanggal, setTanggal] = useState(ld());
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
+  const [bukti, setBukti] = useState('');
 
   const [filterDate, setFilterDate] = useState(ld());
 
@@ -51,10 +53,12 @@ export default function ExpensePage() {
         biaya: numBiaya,
         oleh_id: me.id,
         oleh_nama: me.name,
+        bukti_url: bukti || null,
       });
       if (error) throw error;
       setNama('');
       setBiaya('');
+      setBukti('');
       await refreshAll();
     } catch (ex) {
       setErr(ex?.message || 'Gagal menyimpan pengeluaran.');
@@ -120,6 +124,23 @@ export default function ExpensePage() {
             </div>
           </div>
 
+          <label htmlFor="expense-proof">Bukti pengeluaran (opsional)</label>
+          <input
+            id="expense-proof"
+            type="file"
+            accept="image/*"
+            onChange={async (e) => {
+              try {
+                setErr('');
+                setBukti(e.target.files?.[0] ? await processExpenseImage(e.target.files[0]) : '');
+              } catch {
+                setBukti('');
+                setErr('Foto bukti tidak dapat diproses.');
+              }
+            }}
+          />
+          {bukti && <img className="expense-proof-preview" src={bukti} alt="Pratinjau bukti pengeluaran" />}
+
           {err && <div className="err">{err}</div>}
           <button
             type="submit"
@@ -157,6 +178,7 @@ export default function ExpensePage() {
               <th>Keperluan</th>
               <th>Biaya</th>
               <th>Oleh</th>
+              <th>Bukti</th>
               {isOwner && <th></th>}
             </tr>
           </thead>
@@ -170,6 +192,7 @@ export default function ExpensePage() {
                   <td>{e.nama}</td>
                   <td>{rp(e.biaya)}</td>
                   <td>{e.oleh_nama}</td>
+                  <td>{e.bukti_url ? <a href={e.bukti_url} target="_blank" rel="noreferrer">Lihat bukti</a> : '-'}</td>
                   {isOwner && (
                     <td>
                       <button
@@ -185,7 +208,7 @@ export default function ExpensePage() {
               ))
             ) : (
               <tr>
-                <td colSpan={isOwner ? 7 : 6} className="mu">
+                <td colSpan={isOwner ? 8 : 7} className="mu">
                   Belum ada catatan pengeluaran.
                 </td>
               </tr>
