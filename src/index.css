@@ -174,13 +174,24 @@ h2 {
 }
 
 .top-user-info strong,
-.top-user-info span {
+.top-user-info > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   overflow-wrap: anywhere;
 }
 
-.top-user-info span {
+.top-user-info strong {
+  color: var(--text);
+}
+
+.top-user-info > span {
   color: var(--muted);
   font-size: 13px;
+}
+
+.top-user-info .nav-icon {
+  flex: 0 0 20px;
 }
 
 .shift-button {
