@@ -73,7 +73,7 @@ export default function TopBar({ onSelectTab }) {
         {tabs.map(([key, label]) => (
           <button
             key={key}
-            className={tab === key ? 'on' : ''}
+            className={`${tab === key ? 'on' : ''} ${key === 'kasir' ? 'kasir-tab' : ''}`}
             onClick={() => handleTabChange(key)}
           >
             {label}
