@@ -1058,6 +1058,10 @@ th, td {
   gap: 8px;
 }
 
+.payment-methods button {
+  border-radius: 12px;
+}
+
 .q {
   display: flex;
   align-items: center;

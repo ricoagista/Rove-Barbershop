@@ -413,7 +413,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         )}
 
         <label>Metode bayar *</label>
-        <div className="two" style={{ marginBottom: 10 }}>
+        <div className="two payment-methods" style={{ marginBottom: 10 }}>
           {['Tunai', 'QRIS'].map((m) => (
             <button
               key={m}
