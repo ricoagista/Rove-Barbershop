@@ -37,9 +37,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   // Daftar reservasi aktif (Baru / Hadir)
   const activeBookings = useMemo(() => {
     return bookings
-      .filter((b) => b.status === 'Baru' || b.status === 'Hadir')
+      .filter((b) => (b.status === 'Baru' || b.status === 'Hadir') && (me.role !== 'capster' || b.kap_id === me.id))
       .sort((a, b) => `${a.tanggal}${a.jam}`.localeCompare(`${b.tanggal}${b.jam}`));
-  }, [bookings]);
+  }, [bookings, me.id, me.role]);
 
   const cartEntries = useMemo(() => {
     return Object.entries(cart)
@@ -64,6 +64,10 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   const bayarNum = Number(bayar) || 0;
 
   const addItem = (id) => {
+    if (me.role === 'capster' && ptype === 'regular' && !isCapsterActive(me.id)) {
+      setErr('Anda sedang tidak shift dan tidak dapat melayani transaksi regular.');
+      return;
+    }
     if (ptype === 'reservasi' && !bkId) {
       setErr('Pilih reservasi terlebih dulu untuk memuat layanan.');
       return;
