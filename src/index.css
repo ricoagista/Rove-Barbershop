@@ -566,6 +566,12 @@ label {
     margin: 0;
   }
 
+  .profile-link {
+    grid-column: 1 / -1;
+    width: 100%;
+    text-align: left;
+  }
+
   .bar .t br {
     display: none;
   }

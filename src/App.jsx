@@ -17,7 +17,6 @@ import ProfilePage from './pages/ProfilePage';
 function MainRouter() {
   const { isConfigured, ready, sessionUser, me, tab, setTab, logout } = useApp();
   const [reprintReceipt, setReprintReceipt] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [path, setPath] = useState(window.location.pathname);
 
   useEffect(() => {
@@ -78,14 +77,13 @@ function MainRouter() {
     };
 
     const settingsPath = path.startsWith('/pengaturan/') ? path : '/pengaturan/policy';
-    const openProfile = () => { setSidebarOpen(false); navigate('/profile'); };
 
     return (
-      <div className="app-shell">
-        <TopBar onSelectTab={(key) => { setSidebarOpen(false); handleTabChange(key); }} onOpenProfile={openProfile} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((open) => !open)} />
-        <div className="wrap">
+      <div className="wrap">
+        <TopBar onSelectTab={handleTabChange} />
 
         <main>
+        {tab === 'profile' && <ProfilePage />}
         {tab === 'kasir' && (
           <CashierPage
             externalReceipt={reprintReceipt}
@@ -99,10 +97,8 @@ function MainRouter() {
         {tab === 'layanan' && isOwner && <ServiceManagePage />}
         {tab === 'akun' && isOwner && <AccountManagePage />}
         {tab === 'pengaturan' && isOwner && <SettingsPage initialPath={settingsPath} onNavigate={navigate} />}
-        {tab === 'profile' && <ProfilePage />}
         {tab === 'laporan' && isOwner && <ReportPage onReprint={handleReprint} />}
         </main>
-        </div>
       </div>
     );
   }

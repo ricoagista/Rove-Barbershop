@@ -6,17 +6,42 @@ export default function ProfilePage() {
   const { me, brand, isServiceOpen, openService, closeService, logout } = useApp();
   const [confirmClose, setConfirmClose] = useState(false);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (!confirmClose) return undefined; const id = setTimeout(() => setConfirmClose(false), 4000); return () => clearTimeout(id); }, [confirmClose]);
-  const toggleShift = async () => {
+
+  useEffect(() => {
+    if (!confirmClose) return undefined;
+    const timer = setTimeout(() => setConfirmClose(false), 4000);
+    return () => clearTimeout(timer);
+  }, [confirmClose]);
+
+  const handleShift = async () => {
     if (busy) return;
     if (isServiceOpen && !confirmClose) return setConfirmClose(true);
     setBusy(true);
-    try { if (isServiceOpen) await closeService(); else await openService(); } finally { setBusy(false); setConfirmClose(false); }
+    setConfirmClose(false);
+    try {
+      await (isServiceOpen ? closeService() : openService());
+    } finally {
+      setBusy(false);
+    }
   };
-  return <div className="card profile-page">
-    <div className="profile-heading"><img src="/logo.jpeg" alt="Logo" /><div><h2>{brand.nama}</h2><p className="mu">{brand.jargon}</p></div></div>
-    <div className="profile-info"><b>{me.name}</b><span>{roleName(me.role)}</span></div>
-    <button className={isServiceOpen ? 'cl' : 'ok'} disabled={busy} onClick={toggleShift}>{isServiceOpen ? confirmClose ? 'Yakin Close?' : 'Close Service' : 'Open Service'}</button>
-    <button type="button" onClick={logout}>Keluar</button>
-  </div>;
+
+  return (
+    <div className="profile-page">
+      <div className="card profile-card">
+        <img className="profile-card-logo" src="/logo.jpeg" alt="Logo" />
+        <h1>{brand.nama}</h1>
+        {brand.jargon && <p className="sub">{brand.jargon}</p>}
+        <div className="profile-identity">
+          <b>{me.name}</b>
+          <span>{roleName(me.role)}</span>
+        </div>
+        <div className="profile-actions">
+          <button className={isServiceOpen ? 'cl' : 'ok'} disabled={busy} onClick={handleShift}>
+            {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
+          </button>
+          <button type="button" onClick={logout}>Keluar</button>
+        </div>
+      </div>
+    </div>
+  );
 }

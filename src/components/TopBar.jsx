@@ -8,29 +8,19 @@ export default function TopBar({ onSelectTab }) {
     brand,
     tab,
     setTab,
-    isServiceOpen,
-    openService,
-    closeService,
     logout,
     newBkCount,
     setNewBkCount,
   } = useApp();
 
-  const [confirmClose, setConfirmClose] = useState(false);
-  const [busyShift, setBusyShift] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (!confirmClose) return;
-    const t = setTimeout(() => setConfirmClose(false), 4000);
-    return () => clearTimeout(t);
-  }, [confirmClose]);
 
   if (!me) return null;
 
   const isOwner = me.role === 'owner';
   const tabs = isOwner
     ? [
+        ['profile', 'Profil'],
         ['kasir', 'Kasir'],
         ['reservasi', 'Reservasi'],
         ['promo', 'Promo'],
@@ -41,35 +31,12 @@ export default function TopBar({ onSelectTab }) {
         ['laporan', 'Laporan'],
       ]
     : [
+        ['profile', 'Profil'],
         ['kasir', 'Kasir'],
         ['reservasi', 'Reservasi'],
         ['pengeluaran', 'Pengeluaran'],
         ['daftar', 'Daftar Transaksi'],
       ];
-
-  const handleShiftClick = async () => {
-    if (busyShift) return;
-    if (!isServiceOpen) {
-      setBusyShift(true);
-      try {
-        await openService();
-      } finally {
-        setBusyShift(false);
-      }
-    } else {
-      if (!confirmClose) {
-        setConfirmClose(true);
-      } else {
-        setBusyShift(true);
-        setConfirmClose(false);
-        try {
-          await closeService();
-        } finally {
-          setBusyShift(false);
-        }
-      }
-    }
-  };
 
   const handleTabChange = (key) => {
     setTab(key);
@@ -81,31 +48,8 @@ export default function TopBar({ onSelectTab }) {
   return (
     <>
       <div className="bar">
-        <img src="/logo.jpeg" alt="Logo" />
-        <div className="t">
-          <b>{brand.nama}</b>
-          {brand.jargon && (
-            <>
-              <span>{brand.jargon}</span>
-              <br />
-            </>
-          )}
-          <span>
-            {me.name} · {roleName(me.role)}
-          </span>
-        </div>
-        <button
-          className={isServiceOpen ? 'cl' : 'ok'}
-          disabled={busyShift}
-          onClick={handleShiftClick}
-        >
-          {isServiceOpen
-            ? confirmClose
-              ? 'Yakin Close?'
-              : 'Close Service'
-            : 'Open Service'}
-        </button>
-        <button onClick={logout}>Keluar</button>
+        <div className="t"><b>{brand.nama}</b><span>Panel staf</span></div>
+        <button type="button" className="profile-link" onClick={() => handleTabChange('profile')}>{me.name} · {roleName(me.role)}</button>
       </div>
 
       <button className="menu-toggle" type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
