@@ -196,8 +196,9 @@ export default function BookingPage() {
     if (!kapId) {
       return setErrorMsg('Pilih capster terlebih dahulu.');
     }
-    if (!nama.trim()) {
-      return setErrorMsg('Isi nama lengkap Anda.');
+    const namaLengkap = nama.trim();
+    if (namaLengkap.length < 3) {
+      return setErrorMsg('Nama lengkap minimal 3 karakter.');
     }
     const hairCuts = selectedServices.filter((s) => s.kat === 'Hair Cut');
     if (!hairCuts.length) return setErrorMsg('Pilih minimal satu layanan Hair Cut.');
@@ -225,19 +226,6 @@ export default function BookingPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const resetForm = () => {
-    setDoneBooking(null);
-    setSelectedSvcIds([]);
-    setPeopleCount(1);
-    setTanggal(today);
-    clearBookingDate();
-    setJam('');
-    setKapId('');
-    setNama('');
-    setWa('');
-    setErrorMsg('');
   };
 
   return (
@@ -283,11 +271,6 @@ export default function BookingPage() {
           <div className="row">
             <span>Estimasi Total</span>
             <b className="tot">{rp(doneBooking.harga)}</b>
-          </div>
-          <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-            <button type="button" onClick={resetForm}>
-              Booking Lagi
-            </button>
           </div>
         </div>
       ) : (
@@ -422,7 +405,9 @@ export default function BookingPage() {
             <label>Nama Lengkap</label>
             <input
               type="text"
+              minLength={3}
               maxLength={60}
+              required
               placeholder="Contoh: Jhon Doe"
               value={nama}
               onChange={(e) => setNama(e.target.value)}
