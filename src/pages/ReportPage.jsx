@@ -395,17 +395,35 @@ export default function ReportPage({ onReprint }) {
       )}
 
       {historySale && (
-        <div className="card">
-          <h2>Riwayat Edit {historySale.nomor}</h2>
-          {salesEditHistory.filter((item) => item.sale_id === historySale.id).map((item) => (
-            <div key={item.id} className="card">
-              <b>{item.edited_by_name}</b> · {tstr(item.edited_at)}
-              <div className="row"><span>Sebelum</span><span>{formatSaleItems(item.before_data?.items)}</span></div>
-              <div className="row"><span>Sesudah</span><span>{formatSaleItems(item.after_data?.items)}</span></div>
-              <div className="row"><span>Total</span><span>{rp(item.before_data?.total)} → {rp(item.after_data?.total)}</span></div>
+        <div className="audit-overlay" role="dialog" aria-modal="true" aria-labelledby="audit-title">
+          <div className="audit-dialog">
+            <div className="row">
+              <h2 id="audit-title">Riwayat Edit {historySale.nomor}</h2>
+              <button type="button" aria-label="Tutup riwayat" onClick={() => setHistorySale(null)}>×</button>
             </div>
-          ))}
-          <button type="button" onClick={() => setHistorySale(null)}>Tutup riwayat</button>
+            {salesEditHistory.filter((item) => item.sale_id === historySale.id).map((item) => (
+              <div key={item.id} className="audit-entry">
+                <p className="mu">Diedit oleh <b>{item.edited_by_name}</b> pada {tstr(item.edited_at)}</p>
+                <div className="audit-columns">
+                  {[['Sebelum', item.before_data], ['Sesudah', item.after_data]].map(([title, data]) => (
+                    <div className="audit-column" key={title}>
+                      <h3>{title}</h3>
+                      <div className="row"><span>Pelanggan</span><b>{data?.pelanggan || '-'}</b></div>
+                      <div className="row"><span>WhatsApp</span><b>{data?.wa || '-'}</b></div>
+                      <div className="row"><span>Layanan</span><b>{formatSaleItems(data?.items) || '-'}</b></div>
+                      <div className="row"><span>Subtotal</span><b>{rp(data?.subtotal)}</b></div>
+                      <div className="row"><span>Diskon</span><b>{rp(data?.diskon)}</b></div>
+                      <div className="row"><span>Promo</span><b>{data?.promo || '-'}</b></div>
+                      <div className="row"><span>Total</span><b>{rp(data?.total)}</b></div>
+                      <div className="row"><span>Metode</span><b>{data?.metode || '-'}</b></div>
+                      <div className="row"><span>Capster</span><b>{data?.capster_nama || '-'}</b></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button type="button" onClick={() => setHistorySale(null)}>Tutup riwayat</button>
+          </div>
         </div>
       )}
 
