@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { roleName, normWa } from '../utils/format';
+import { normWa } from '../utils/format';
 import { processSquareAvatar } from '../utils/media';
 import { supabase } from '../lib/supabase';
 
 export default function ProfilePage() {
-  const { me, isServiceOpen, openService, closeService, logout, refreshAll } = useApp();
-  const [confirmClose, setConfirmClose] = useState(false);
+  const { me, logout, refreshAll } = useApp();
   const [form, setForm] = useState({ name: me?.name || '', wa: me?.wa || '', photo_url: me?.photo_url || '' });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!confirmClose) return undefined;
-    const timer = setTimeout(() => setConfirmClose(false), 4000);
-    return () => clearTimeout(timer);
-  }, [confirmClose]);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   useEffect(() => {
     setForm({ name: me?.name || '', wa: me?.wa || '', photo_url: me?.photo_url || '' });
@@ -46,30 +42,26 @@ export default function ProfilePage() {
     finally { setSaving(false); }
   };
 
-  const handleShift = async () => {
-    if (busy) return;
-    if (isServiceOpen && !confirmClose) return setConfirmClose(true);
-    setBusy(true);
-    setConfirmClose(false);
+  const changePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError(''); setPasswordMessage('');
+    if (newPassword.length < 6) return setPasswordError('Password minimal 6 karakter.');
+    setPasswordSaving(true);
     try {
-      await (isServiceOpen ? closeService() : openService());
-    } finally {
-      setBusy(false);
-    }
+      const { error: passwordSaveError } = await supabase.auth.updateUser({ password: newPassword });
+      if (passwordSaveError) throw passwordSaveError;
+      setNewPassword(''); setPasswordMessage('Password berhasil diperbarui.');
+    } catch (ex) { setPasswordError(ex?.message || 'Gagal mengubah password.'); }
+    finally { setPasswordSaving(false); }
   };
 
   return (
     <div className="profile-page">
       <div className="card profile-card">
-        <div className="profile-actions profile-shift-actions">
-          <button className={isServiceOpen ? 'cl' : 'ok'} disabled={busy} onClick={handleShift}>
-            {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
-          </button>
-        </div>
         <h1>Profil Saya</h1>
         <div className="profile-identity">
           <b>{me.name}</b>
-          <span>{roleName(me.role)} · @{me.username}</span>
+          <span>@{me.username}</span>
         </div>
         {error && <p className="err">{error}</p>}
         {message && <p className="ok">{message}</p>}
@@ -80,8 +72,17 @@ export default function ProfilePage() {
           {form.photo_url && <img className="profile-avatar-preview" src={form.photo_url} alt="Pratinjau foto profil" />}
           <button className="p" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Profil'}</button>
         </form>
+        <div className="profile-section">
+          <h2>Ubah Password</h2>
+          {passwordError && <p className="err">{passwordError}</p>}
+          {passwordMessage && <p className="ok">{passwordMessage}</p>}
+          <form onSubmit={changePassword}>
+            <label>Password baru<input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} autoComplete="new-password" /></label>
+            <button className="p" disabled={passwordSaving}>{passwordSaving ? 'Menyimpan...' : 'Ubah Password'}</button>
+          </form>
+        </div>
         <div className="profile-actions">
-          <button type="button" onClick={logout}>Keluar</button>
+          <button type="button" onClick={logout}>Logout</button>
         </div>
       </div>
     </div>
