@@ -117,7 +117,7 @@ export default function BookingPage() {
       const count = prev.filter((x) => x === id).length;
       const total = prev.filter((selectedId) => services.find((s) => s.id === selectedId)?.kat === 'Hair Cut').length;
       if (delta > 0 && total >= peopleCount) return prev;
-      if (delta < 0 && count === 0) return prev;
+      if (delta < 0 && (count === 0 || total <= peopleCount)) return prev;
       if (delta < 0) {
         let removed = false;
         return prev.filter((x) => {
