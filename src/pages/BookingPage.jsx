@@ -4,6 +4,15 @@ import { supabase } from '../lib/supabase';
 import { rp, ld, normWa } from '../utils/format';
 
 const BOOKING_DATE_KEY = 'rove.booking.date';
+const BOOKING_DEVICE_KEY = 'rove.booking.device';
+
+function getBookingDeviceId() {
+  try {
+    let id = localStorage.getItem(BOOKING_DEVICE_KEY);
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem(BOOKING_DEVICE_KEY, id); }
+    return id;
+  } catch { return ''; }
+}
 
 function readBookingDate(today) {
   try {
@@ -218,6 +227,7 @@ export default function BookingPage() {
         p_kap_id: kapId,
         p_nama: nama.trim(),
         p_wa: cleanWa,
+        p_device_id: getBookingDeviceId(),
       });
       if (error) throw error;
       setDoneBooking(data);
