@@ -29,7 +29,6 @@ export default function ReportPage({ onReprint }) {
   const [editWa, setEditWa] = useState('');
   const [editMetode, setEditMetode] = useState('Tunai');
   const [editItems, setEditItems] = useState([]);
-  const [editTotal, setEditTotal] = useState('');
   const [editErr, setEditErr] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
   const [historySale, setHistorySale] = useState(null);
@@ -168,7 +167,6 @@ export default function ReportPage({ onReprint }) {
     setEditWa(s.wa || '');
     setEditMetode(s.metode || 'Tunai');
     setEditItems(normalizeSaleItems(s.items));
-    setEditTotal(String(s.total || 0));
     setEditErr('');
   };
 
@@ -181,7 +179,7 @@ export default function ReportPage({ onReprint }) {
     const items = normalizeSaleItems(editItems).filter((item) => item.qty > 0 && item.nama.trim());
     if (!items.length) return setEditErr('Pilih minimal satu layanan.');
     const subtotal = items.reduce((sum, item) => sum + Number(item.harga || 0) * Number(item.qty || 0), 0);
-    const numTotal = Number(editTotal) || subtotal;
+    const numTotal = subtotal - Number(editingTrx.diskon || 0);
     const cap = capsters.find((c) => c.id === editCapId);
 
     setSavingEdit(true);
@@ -495,12 +493,10 @@ export default function ReportPage({ onReprint }) {
                 </select>
               </div>
               <div>
-                <label>Total (Rp)</label>
-                <input
-                  inputMode="numeric"
-                  value={editTotal}
-                  onChange={(e) => setEditTotal(e.target.value.replace(/\D/g, ''))}
-                />
+                <label>Total otomatis</label>
+                <output className="row" style={{ display: 'flex' }}>
+                  {rp(normalizeSaleItems(editItems).reduce((sum, item) => sum + item.harga * item.qty, 0) - Number(editingTrx.diskon || 0))}
+                </output>
               </div>
             </div>
             {editErr && <div className="err">{editErr}</div>}
