@@ -109,9 +109,6 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     setBkId(id);
     setErr('');
     const bk = bookings.find((b) => b.id === id);
-    if (me.role === 'capster' && bk?.kap_id !== me.id) {
-      setErr('Reservasi ini ditujukan untuk capster lain. Pastikan pergantian capster sudah disetujui.');
-    }
     if (!bk) {
       setCustName('');
       setCustWa('');
@@ -313,9 +310,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
                   </button>
                 ))}
               </div>
-              {pickedBooking && me.role === 'capster' && pickedBooking.kap_id !== me.id ? (
-                <div className="booking-warning-message" role="alert"><svg className="warning-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 21 20H3L12 4Z" /><path d="M12 9v5m0 3h.01" /></svg><div><strong>Reservasi untuk capster lain</strong><span>Jadwal ini ditujukan untuk {pickedBooking.kap_nama || 'capster lain'}.</span><span>Pastikan pergantian capster sudah disetujui.</span></div></div>
-              ) : !pickedBooking ? <p className="booking-picker-hint">Pilih reservasi untuk mengisi pelanggan dan layanan secara otomatis.</p> : null}
+              {!pickedBooking && <p className="booking-picker-hint">Pilih reservasi untuk mengisi pelanggan dan layanan secara otomatis.</p>}
             </div>
           ) : <p className="mu">Belum ada reservasi aktif.</p>
         ) : null}
