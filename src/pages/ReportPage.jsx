@@ -396,6 +396,11 @@ export default function ReportPage({ onReprint }) {
       {editingTrx && (
         <div className="card">
           <h2>Edit Transaksi ({editingTrx.nomor})</h2>
+          <p className="mu">
+            {editingTrx.edit_ts
+              ? `Terakhir diedit ${tstr(editingTrx.edit_ts)} oleh ${editingTrx.edit_oleh || 'staf tidak diketahui'}.`
+              : 'Belum pernah diedit.'}
+          </p>
           <form onSubmit={handleSaveEdit}>
             <label>Layanan</label>
             {editItems.map((item, index) => (
