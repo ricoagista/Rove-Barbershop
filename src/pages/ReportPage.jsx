@@ -63,6 +63,13 @@ export default function ReportPage({ onReprint }) {
     return expenses.filter((e) => inRange(e.tanggal, activeRange));
   }, [expenses, activeRange]);
 
+  const formatSaleItems = (items) => (Array.isArray(items) ? items : []).map((item) => {
+    const service = services.find((s) => s.id === item.id || s.nama === item.nama);
+    const nama = item.nama || service?.nama || 'Layanan tidak diketahui';
+    const qty = Number(item.qty) || 0;
+    return `${nama} (${qty})`;
+  }).join(', ');
+
   const stats = useMemo(() => {
     let omset = 0;
     let tunai = 0;
@@ -202,7 +209,7 @@ export default function ReportPage({ onReprint }) {
         s.pelanggan,
         s.wa,
         s.jenis === 'reservasi' ? 'Reservasi' : 'Regular',
-        (s.items || []).map((it) => `${it.nama} (${it.qty})`).join('; '),
+        formatSaleItems(s.items).replaceAll(', ', '; '),
         s.capster_nama,
         s.kasir_nama,
         s.subtotal,
@@ -464,7 +471,7 @@ export default function ReportPage({ onReprint }) {
                   <td>{tstr(s.ts)}</td>
                   <td>{s.pelanggan}</td>
                   <td>{s.jenis === 'reservasi' ? 'Reservasi' : 'Regular'}</td>
-                  <td>{(s.items || []).map((it) => `${it.nama} (${it.qty})`).join(', ')}</td>
+                  <td>{formatSaleItems(s.items)}</td>
                   <td>{s.capster_nama}</td>
                   <td>{s.metode}</td>
                   <td>{rp(s.total)}</td>
