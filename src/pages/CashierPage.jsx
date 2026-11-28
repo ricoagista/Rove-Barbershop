@@ -364,15 +364,40 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           <p className="mu">Belum ada pilihan.</p>
         )}
 
-        <label>Promo</label>
-        <select value={promoId} onChange={(e) => setPromoId(e.target.value)}>
-          <option value="">Tanpa promo</option>
-          {promos.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nama} — {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)}
-            </option>
-          ))}
-        </select>
+        <div className="promo-picker">
+          <label>Pilih promo</label>
+          <div className="promo-options" role="listbox" aria-label="Daftar promo">
+            <button
+              type="button"
+              role="option"
+              aria-selected={!promoId}
+              className={`promo-option ${!promoId ? 'selected' : ''}`}
+              onClick={() => setPromoId('')}
+            >
+              <span className="promo-option-info">
+                <strong>Tanpa promo</strong>
+                <span>Harga normal</span>
+              </span>
+              <span className="promo-option-status">{!promoId ? 'Dipilih' : 'Pilih'}</span>
+            </button>
+            {promos.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                role="option"
+                aria-selected={promoId === p.id}
+                className={`promo-option ${promoId === p.id ? 'selected' : ''}`}
+                onClick={() => setPromoId(p.id)}
+              >
+                <span className="promo-option-info">
+                  <strong>{p.nama}</strong>
+                  <span>Potongan {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)}</span>
+                </span>
+                <span className="promo-option-status">{promoId === p.id ? 'Dipilih' : 'Pilih'}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {diskon > 0 && (
           <>

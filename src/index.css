@@ -102,7 +102,8 @@ h2 {
   opacity: 0.55;
 }
 
-.booking-picker {
+.booking-picker,
+.promo-picker {
   display: grid;
   gap: 8px;
   padding: 12px;
@@ -111,7 +112,8 @@ h2 {
   background: var(--surface);
 }
 
-.booking-picker label {
+.booking-picker label,
+.promo-picker label {
   color: var(--tx);
   font-weight: 600;
 }
@@ -139,9 +141,58 @@ h2 {
 }
 
 .booking-option:hover,
-.booking-option.selected {
+.booking-option.selected,
+.promo-option:hover,
+.promo-option.selected {
   border-color: var(--accent);
   background: var(--surface-2);
+}
+
+.promo-options {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.promo-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--tx);
+}
+
+.promo-option-info {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.promo-option-info strong,
+.promo-option-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.promo-option-info span,
+.promo-option-status {
+  color: var(--mu);
+  font-size: 12px;
+}
+
+.promo-option-status {
+  color: var(--accent-text);
+  font-weight: 600;
+  text-align: right;
 }
 
 .booking-option-time {
