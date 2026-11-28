@@ -300,14 +300,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
                   </button>
                 ))}
               </div>
-              {pickedBooking ? (
-                <div className="booking-picked">
-                  <strong>{pickedBooking.nama}</strong>
-                  <span>{pickedBooking.tanggal} · {pickedBooking.jam}</span>
-                  <span>{pickedBooking.svc_nama}</span>
-                  <span>{pickedBooking.wa}{pickedBooking.kap_nama ? ` · Capster ${pickedBooking.kap_nama}` : ''}</span>
-                </div>
-              ) : <p className="booking-picker-hint">Pilih reservasi untuk mengisi pelanggan dan layanan secara otomatis.</p>}
+              {!pickedBooking && <p className="booking-picker-hint">Pilih reservasi untuk mengisi pelanggan dan layanan secara otomatis.</p>}
             </div>
           ) : <p className="mu">Belum ada reservasi aktif.</p>
         ) : null}
