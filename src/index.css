@@ -99,7 +99,7 @@ h2 {
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: var(--surface-2);
+  background: var(--surface);
 }
 
 .booking-picker label {
@@ -132,7 +132,7 @@ h2 {
 .booking-option:hover,
 .booking-option.selected {
   border-color: var(--accent);
-  background: var(--accent-soft, var(--surface-2));
+  background: var(--surface-2);
 }
 
 .booking-option-time {
