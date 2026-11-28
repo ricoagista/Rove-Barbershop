@@ -98,6 +98,16 @@ h2 {
   gap: 12px;
 }
 
+.nota-image-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin: 8px 0 12px;
+}
+
+.nota-image-actions button {
+  min-height: 44px;
+}
+
 .expense-proof-preview {
   display: block;
   width: min(100%, 320px);
@@ -698,14 +708,7 @@ th, td {
 }
 
 .kap:disabled {
-  opacity: 0.55;
-  border-color: var(--border);
-  background: var(--unavailable-bg);
-  color: var(--unavailable-text);
-}
-
-.kap.unavailable {
-  cursor: not-allowed;
+  opacity: 0.35;
 }
 
 .kap.on {
