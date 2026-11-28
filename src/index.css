@@ -108,10 +108,11 @@ h2 {
   gap: 6px;
 }
 
-.security-settings form > label:has(input[type='checkbox']) {
+.security-toggle-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   min-height: 44px;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -119,10 +120,18 @@ h2 {
   background: var(--surface-2);
 }
 
-.security-settings input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
-  margin: 0;
+.security-toggle-row .switch {
+  min-width: 64px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.security-toggle-row .switch.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 .nota-image-actions {
