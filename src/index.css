@@ -539,12 +539,11 @@ label {
 
   .bar .t {
     min-width: 0;
-    overflow-wrap: anywhere;
+    flex: 1 1 calc(100% - 62px);
   }
 
   .bar .t b,
   .bar .t span {
-    display: block;
     overflow-wrap: anywhere;
   }
 
@@ -553,9 +552,9 @@ label {
     margin-bottom: 3px;
   }
 
-  .bar .t .user-role {
-    margin-top: 4px;
-    opacity: 0.85;
+  .bar .t span {
+    display: block;
+    line-height: 1.25;
   }
 
   .bar > button {
@@ -566,6 +565,11 @@ label {
   .bar > button:first-of-type {
     order: 3;
     flex: 1 1 48%;
+  }
+
+  .bar > button:first-of-type,
+  .bar > button:last-of-type {
+    white-space: nowrap;
   }
 
   .bar > button:last-of-type {
