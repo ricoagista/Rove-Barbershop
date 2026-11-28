@@ -452,7 +452,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
 
         {err && <div className="err">{err}</div>}
         <button
-          className="p"
+          className="p cashier-pay-button"
           style={{ width: '100%', marginTop: 6 }}
           disabled={!subtotal || !isServiceOpen || saving}
           onClick={handlePay}

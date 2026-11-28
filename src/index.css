@@ -1073,7 +1073,8 @@ th, td {
   margin: 0;
 }
 
-.payment-methods button {
+.payment-methods button,
+.cashier-pay-button {
   border-radius: 12px;
 }
 
