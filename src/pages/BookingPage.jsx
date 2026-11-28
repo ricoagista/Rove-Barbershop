@@ -370,20 +370,19 @@ export default function BookingPage() {
 
           <div className="card">
             <h2>Pilih Capster</h2>
-            {!jam ? (
-              <p className="mu">Pilih tanggal dan jam terlebih dahulu untuk melihat ketersediaan capster.</p>
-            ) : capsters.length === 0 ? (
+            {!jam && <p className="mu">Pilih tanggal dan jam untuk mengecek ketersediaan capster.</p>}
+            {capsters.length === 0 ? (
               <p className="mu">Belum ada data capster.</p>
             ) : (
               <div className="grid">
                 {capsters.map((c) => {
-                  const busy = isCapsterBusy(c.id, tanggal, jam);
+                  const busy = jam ? isCapsterBusy(c.id, tanggal, jam) : false;
                   return (
                     <button
                       type="button"
                       key={c.id}
-                      className={`kap ${kapId === c.id ? 'on' : ''}`}
-                      disabled={busy}
+                      className={`kap ${kapId === c.id ? 'on' : ''} ${busy ? 'unavailable' : ''}`}
+                      disabled={busy || !jam}
                       onClick={() => setKapId(c.id)}
                     >
                       {c.photo_url ? (
@@ -392,7 +391,7 @@ export default function BookingPage() {
                         <i>✂️</i>
                       )}
                       <b>{c.name}</b>
-                      <span>{busy ? 'Penuh di jam ini' : 'Tersedia'}</span>
+                      <span>{!jam ? 'Pilih jam terlebih dahulu' : busy ? 'Tidak tersedia di jam ini' : 'Tersedia'}</span>
                     </button>
                   );
                 })}

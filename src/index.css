@@ -698,7 +698,14 @@ th, td {
 }
 
 .kap:disabled {
-  opacity: 0.35;
+  opacity: 0.55;
+  border-color: var(--border);
+  background: var(--unavailable-bg);
+  color: var(--unavailable-text);
+}
+
+.kap.unavailable {
+  cursor: not-allowed;
 }
 
 .kap.on {
