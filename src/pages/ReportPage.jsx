@@ -97,6 +97,13 @@ export default function ReportPage({ onReprint }) {
     return <>{from.slice(0, start)}<mark className={side === 'before' ? 'audit-old-mark' : 'audit-new-mark'}>{from.slice(start, endFrom) || '∅'}</mark>{from.slice(endFrom)}</>;
   };
 
+  const auditField = (beforeData, afterData, key, side, format = (value) => value ?? '-') => {
+    if (!Object.prototype.hasOwnProperty.call(beforeData || {}, key)) {
+      return format(side === 'before' ? undefined : afterData?.[key]);
+    }
+    return diffText(format(beforeData?.[key]), format(afterData?.[key]), side);
+  };
+
   const stats = useMemo(() => {
     let omset = 0;
     let tunai = 0;
@@ -425,9 +432,9 @@ export default function ReportPage({ onReprint }) {
                   {[['Sebelum', item.before_data], ['Sesudah', item.after_data]].map(([title, data]) => (
                     <div className="audit-column" key={title}>
                       <h3>{title}</h3>
-                      <div className="row"><span>Pelanggan</span><b>{diffText(item.before_data?.pelanggan, item.after_data?.pelanggan, title === 'Sebelum' ? 'before' : 'after')}</b></div>
-                      <div className="row"><span>WhatsApp</span><b>{diffText(item.before_data?.wa, item.after_data?.wa, title === 'Sebelum' ? 'before' : 'after')}</b></div>
-                      <div className="row"><span>Layanan</span><b>{diffText(formatSaleItems(item.before_data?.items), formatSaleItems(item.after_data?.items), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Pelanggan</span><b>{auditField(item.before_data, item.after_data, 'pelanggan', title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>WhatsApp</span><b>{auditField(item.before_data, item.after_data, 'wa', title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Layanan</span><b>{auditField(item.before_data, item.after_data, 'items', title === 'Sebelum' ? 'before' : 'after', formatSaleItems)}</b></div>
                       <div className="row"><span>Subtotal</span><b>{diffText(rp(item.before_data?.subtotal), rp(item.after_data?.subtotal), title === 'Sebelum' ? 'before' : 'after')}</b></div>
                       <div className="row"><span>Diskon</span><b>{diffText(rp(item.before_data?.diskon), rp(item.after_data?.diskon), title === 'Sebelum' ? 'before' : 'after')}</b></div>
                       <div className="row"><span>Promo</span><b>{diffText(item.before_data?.promo, item.after_data?.promo, title === 'Sebelum' ? 'before' : 'after')}</b></div>
