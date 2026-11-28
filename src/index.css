@@ -175,8 +175,14 @@ h2 {
   text-align: right;
 }
 
-.booking-warning {
+.booking-warning,
+.booking-warning-message {
   color: var(--warning);
+}
+
+.booking-warning-message {
+  margin: 0;
+  font-size: 13px;
 }
 
 .booking-picked {
