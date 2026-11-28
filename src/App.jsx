@@ -104,7 +104,8 @@ function MainRouter() {
   }
 
   // Area Publik (Tanpa Login)
-  if (window.location.pathname === '/login') {
+  const isStaffHost = window.location.hostname === 'staff.rove-barbershop.biz.id';
+  if (isStaffHost || window.location.pathname === '/login') {
     return <LoginPage />;
   }
 
