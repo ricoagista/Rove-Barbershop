@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import TopBar from './components/TopBar';
 import BookingPage from './pages/BookingPage';
@@ -12,10 +12,25 @@ import ServiceManagePage from './pages/ServiceManagePage';
 import PromoManagePage from './pages/PromoManagePage';
 import AccountManagePage from './pages/AccountManagePage';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 
 function MainRouter() {
-  const { isConfigured, ready, sessionUser, me, view, tab, setTab, logout } = useApp();
+  const { isConfigured, ready, sessionUser, me, tab, setTab, logout } = useApp();
   const [reprintReceipt, setReprintReceipt] = useState(null);
+  const [path, setPath] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const onPopState = () => setPath(window.location.pathname);
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  const navigate = (nextPath) => {
+    window.history.pushState({}, '', nextPath);
+    setPath(nextPath);
+    const nextTab = nextPath.startsWith('/pengaturan/') ? 'pengaturan' : nextPath.slice(1) || 'kasir';
+    setTab(nextTab);
+  };
 
   if (!isConfigured) {
     return (
@@ -57,15 +72,18 @@ function MainRouter() {
     };
 
     const handleTabChange = (nextTab) => {
-      if (nextTab !== 'kasir') {
-        setReprintReceipt(null);
-      }
+      if (nextTab !== 'kasir') setReprintReceipt(null);
+      navigate(nextTab === 'pengaturan' ? '/pengaturan/policy' : `/${nextTab}`);
     };
+
+    const settingsPath = path.startsWith('/pengaturan/') ? path : '/pengaturan/policy';
 
     return (
       <div className="wrap">
         <TopBar onSelectTab={handleTabChange} />
 
+        <main>
+        {tab === 'profile' && <ProfilePage />}
         {tab === 'kasir' && (
           <CashierPage
             externalReceipt={reprintReceipt}
@@ -78,14 +96,15 @@ function MainRouter() {
         {tab === 'promo' && isOwner && <PromoManagePage />}
         {tab === 'layanan' && isOwner && <ServiceManagePage />}
         {tab === 'akun' && isOwner && <AccountManagePage />}
-        {tab === 'pengaturan' && isOwner && <SettingsPage />}
+        {tab === 'pengaturan' && isOwner && <SettingsPage initialPath={settingsPath} onNavigate={navigate} />}
         {tab === 'laporan' && isOwner && <ReportPage onReprint={handleReprint} />}
+        </main>
       </div>
     );
   }
 
   // Area Publik (Tanpa Login)
-  if (view === 'login') {
+  if (window.location.pathname === '/login') {
     return <LoginPage />;
   }
 

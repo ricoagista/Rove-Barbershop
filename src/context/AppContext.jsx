@@ -19,8 +19,10 @@ export function AppProvider({ children }) {
   const [promos, setPromos] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [sales, setSales] = useState([]);
+  const [salesEditHistory, setSalesEditHistory] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [shifts, setShifts] = useState([]);
+  const [publicShifts, setPublicShifts] = useState([]);
   const [settings, setSettings] = useState({});
 
   const [ready, setReady] = useState(false);
@@ -32,16 +34,18 @@ export function AppProvider({ children }) {
   // 1. Fetch data publik (tanpa login)
   const loadPublicData = useCallback(async () => {
     if (!supabase) return;
-    const [svcRes, capRes, slotRes, setRes] = await Promise.all([
+    const [svcRes, capRes, slotRes, setRes, shiftRes] = await Promise.all([
       supabase.from('services').select('*').order('created_at', { ascending: true }),
       supabase.from('public_capsters').select('*').order('name', { ascending: true }),
       supabase.from('public_booked_slots').select('*'),
       supabase.from('public_booking_settings').select('*').maybeSingle(),
+      supabase.from('public_capster_shifts').select('*'),
     ]);
 
     if (svcRes.data) setServices(svcRes.data);
     if (capRes.data) setCapsters(capRes.data);
     if (slotRes.data) setBookedSlots(slotRes.data);
+    if (shiftRes.data) setPublicShifts(shiftRes.data);
     if (setRes.data) {
       setSettings((prev) => ({
         ...prev,
@@ -58,13 +62,15 @@ export function AppProvider({ children }) {
   // 2. Fetch data staf (setelah login)
   const loadStaffData = useCallback(async (uid) => {
     if (!supabase || !uid) return;
-    const [profRes, proRes, bkRes, salRes, expRes, shfRes] = await Promise.all([
+    const [profRes, proRes, bkRes, salRes, auditRes, expRes, shfRes, settingsRes] = await Promise.all([
       supabase.from('profiles').select('*').order('created_at', { ascending: true }),
       supabase.from('promos').select('*').order('created_at', { ascending: true }),
       supabase.from('bookings').select('*').order('tanggal', { ascending: true }),
       supabase.from('sales').select('*').order('ts', { ascending: false }),
+      supabase.from('sales_edit_history').select('*').order('edited_at', { ascending: false }),
       supabase.from('expenses').select('*').order('ts', { ascending: false }),
       supabase.from('shifts').select('*'),
+      supabase.from('settings').select('*'),
     ]);
 
     if (profRes.data) {
@@ -91,8 +97,15 @@ export function AppProvider({ children }) {
       }
     }
     if (salRes.data) setSales(salRes.data);
+    if (auditRes.data) setSalesEditHistory(auditRes.data);
     if (expRes.data) setExpenses(expRes.data);
     if (shfRes.data) setShifts(shfRes.data);
+    if (settingsRes.data) {
+      setSettings((prev) => ({
+        ...prev,
+        ...Object.fromEntries(settingsRes.data.map((row) => [row.id, row.data || {}])),
+      }));
+    }
   }, []);
 
   // 3. Inisialisasi Auth & Realtime
@@ -232,6 +245,10 @@ export function AppProvider({ children }) {
 
   const shiftToday = me ? shifts.find((x) => x.id === `${ld()}_${me.id}`) : null;
   const isServiceOpen = Boolean(shiftToday && shiftToday.status === 'open');
+  const isCapsterActive = (id) => {
+    const shift = [...shifts, ...publicShifts].find((x) => x.id === `${ld()}_${id}`);
+    return Boolean(shift && shift.status === 'open');
+  };
 
   const openService = async () => {
     if (!me) return;
@@ -282,8 +299,11 @@ export function AppProvider({ children }) {
         promos,
         bookings,
         sales,
+        salesEditHistory,
         expenses,
         shifts,
+        publicShifts,
+        isCapsterActive,
         settings,
         brand,
         kontak,

@@ -9,6 +9,7 @@ export default function PromoManagePage() {
   const [nama, setNama] = useState('');
   const [tipe, setTipe] = useState('persen'); // 'persen' | 'rupiah'
   const [nilai, setNilai] = useState('');
+  const [kuota, setKuota] = useState('');
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -17,9 +18,10 @@ export default function PromoManagePage() {
     setErr('');
     const cleanName = nama.trim();
     const numNilai = Number(nilai) || 0;
+    const numKuota = Number(kuota) || 0;
 
-    if (!cleanName || numNilai <= 0) {
-      return setErr('Nama promo dan nilai potongan wajib diisi.');
+    if (!cleanName || numNilai <= 0 || numKuota <= 0) {
+      return setErr('Nama promo, nilai potongan, dan kuota wajib diisi.');
     }
     if (tipe === 'persen' && numNilai > 100) {
       return setErr('Diskon persen maksimal 100%.');
@@ -31,10 +33,13 @@ export default function PromoManagePage() {
         nama: cleanName,
         tipe,
         nilai: numNilai,
+        kuota: numKuota,
+        terpakai: 0,
       });
       if (error) throw error;
       setNama('');
       setNilai('');
+      setKuota('');
       await refreshAll();
     } catch (ex) {
       setErr(ex?.message || 'Gagal menyimpan promo.');
@@ -45,7 +50,8 @@ export default function PromoManagePage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Hapus promo ini?')) return;
-    await supabase.from('promos').delete().eq('id', id);
+    const { error } = await supabase.from('promos').delete().eq('id', id);
+    if (error) return setErr(error.message);
     await refreshAll();
   };
 
@@ -80,6 +86,14 @@ export default function PromoManagePage() {
             </div>
           </div>
 
+          <label>Kuota Promo</label>
+          <input
+            inputMode="numeric"
+            placeholder="Contoh: 50"
+            value={kuota}
+            onChange={(e) => setKuota(e.target.value.replace(/\D/g, ''))}
+          />
+
           {err && <div className="err">{err}</div>}
           <button type="submit" className="p" style={{ width: '100%' }} disabled={saving}>
             {saving ? 'Menyimpan...' : 'Tambah Promo'}
@@ -96,7 +110,7 @@ export default function PromoManagePage() {
                 <b>{p.nama}</b>
                 <br />
                 <span className="mu">
-                  Potongan: {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)}
+                  Potongan: {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)} · Sisa kuota: {Math.max(0, (p.kuota || 0) - (p.terpakai || 0))}/{p.kuota || 0}
                 </span>
               </span>
               <button

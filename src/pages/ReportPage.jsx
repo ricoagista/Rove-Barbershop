@@ -13,7 +13,7 @@ import {
 } from '../utils/format';
 
 export default function ReportPage({ onReprint }) {
-  const { me, sales, expenses, capsters, brand, kontak, refreshAll } = useApp();
+  const { me, sales, salesEditHistory, expenses, services, capsters, brand, kontak, refreshAll } = useApp();
 
   const [per, setPer] = useState('harian'); // 'harian' | 'minggu' | 'bulan' | 'custom'
   const [refDate, setRefDate] = useState(ld());
@@ -28,9 +28,10 @@ export default function ReportPage({ onReprint }) {
   const [editPelanggan, setEditPelanggan] = useState('');
   const [editWa, setEditWa] = useState('');
   const [editMetode, setEditMetode] = useState('Tunai');
-  const [editTotal, setEditTotal] = useState('');
+  const [editItems, setEditItems] = useState([]);
   const [editErr, setEditErr] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [historySale, setHistorySale] = useState(null);
 
   const activeRange = useMemo(() => {
     if (per === 'custom') {
@@ -61,6 +62,46 @@ export default function ReportPage({ onReprint }) {
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => inRange(e.tanggal, activeRange));
   }, [expenses, activeRange]);
+
+  const normalizeSaleItems = (items) => (Array.isArray(items) ? items : []).map((item) => {
+    const service = services.find((s) => s.id === item.id || s.nama === item.nama);
+    return {
+      ...item,
+      id: item.id || service?.id,
+      nama: item.nama || service?.nama || 'Layanan tidak diketahui',
+      harga: Number(item.harga ?? service?.harga) || 0,
+      kat: item.kat || service?.kat,
+      qty: Number(item.qty) || 0,
+    };
+  });
+
+  const formatSaleItems = (items) => normalizeSaleItems(items)
+    .map((item) => `${item.nama} (${item.qty})`)
+    .join(', ');
+
+  const diffText = (before, after, side) => {
+    const oldText = String(before ?? '-');
+    const newText = String(after ?? '-');
+    if (oldText === newText) return oldText;
+    const from = side === 'before' ? oldText : newText;
+    const to = side === 'before' ? newText : oldText;
+    let start = 0;
+    while (start < from.length && start < to.length && from[start] === to[start]) start += 1;
+    let endFrom = from.length;
+    let endTo = to.length;
+    while (endFrom > start && endTo > start && from[endFrom - 1] === to[endTo - 1]) {
+      endFrom -= 1;
+      endTo -= 1;
+    }
+    return <>{from.slice(0, start)}<mark className={side === 'before' ? 'audit-old-mark' : 'audit-new-mark'}>{from.slice(start, endFrom) || '∅'}</mark>{from.slice(endFrom)}</>;
+  };
+
+  const auditField = (beforeData, afterData, key, side, format = (value) => value ?? '-') => {
+    if (!Object.prototype.hasOwnProperty.call(beforeData || {}, key)) {
+      return format(side === 'before' ? undefined : afterData?.[key]);
+    }
+    return diffText(format(beforeData?.[key]), format(afterData?.[key]), side);
+  };
 
   const stats = useMemo(() => {
     let omset = 0;
@@ -125,7 +166,7 @@ export default function ReportPage({ onReprint }) {
     setEditPelanggan(s.pelanggan || '');
     setEditWa(s.wa || '');
     setEditMetode(s.metode || 'Tunai');
-    setEditTotal(String(s.total || 0));
+    setEditItems(normalizeSaleItems(s.items));
     setEditErr('');
   };
 
@@ -135,7 +176,10 @@ export default function ReportPage({ onReprint }) {
     if (!editPelanggan.trim()) return setEditErr('Nama pelanggan wajib diisi.');
     const cleanWa = normWa(editWa);
     if (!cleanWa) return setEditErr('Nomor WhatsApp tidak valid.');
-    const numTotal = Number(editTotal) || 0;
+    const items = normalizeSaleItems(editItems).filter((item) => item.qty > 0 && item.nama.trim());
+    if (!items.length) return setEditErr('Pilih minimal satu layanan.');
+    const subtotal = items.reduce((sum, item) => sum + Number(item.harga || 0) * Number(item.qty || 0), 0);
+    const numTotal = subtotal - Number(editingTrx.diskon || 0);
     const cap = capsters.find((c) => c.id === editCapId);
 
     setSavingEdit(true);
@@ -144,6 +188,8 @@ export default function ReportPage({ onReprint }) {
         pelanggan: editPelanggan.trim(),
         wa: cleanWa,
         metode: editMetode,
+        items,
+        subtotal,
         total: numTotal,
         capster_id: cap ? cap.id : editingTrx.capster_id,
         capster_nama: cap ? cap.name : editingTrx.capster_nama,
@@ -165,8 +211,9 @@ export default function ReportPage({ onReprint }) {
   };
 
   const handleDeleteSale = async (id) => {
-    if (!window.confirm('Hapus transaksi ini secara permanen?')) return;
-    await supabase.from('sales').delete().eq('id', id);
+    if (!window.confirm('Hapus transaksi ini secara permanen? Status reservasi terkait tidak otomatis dikembalikan dari "Selesai".')) return;
+    const { error } = await supabase.from('sales').delete().eq('id', id);
+    if (error) return setEditErr(error.message);
     await refreshAll();
   };
 
@@ -193,8 +240,8 @@ export default function ReportPage({ onReprint }) {
         tstr(s.ts),
         s.pelanggan,
         s.wa,
-        s.jenis,
-        (s.items || []).map((it) => `${it.nama} (${it.qty})`).join('; '),
+        s.jenis === 'reservasi' ? 'Reservasi' : 'Regular',
+        formatSaleItems(s.items).replaceAll(', ', '; '),
         s.capster_nama,
         s.kasir_nama,
         s.subtotal,
@@ -369,10 +416,59 @@ export default function ReportPage({ onReprint }) {
         </div>
       )}
 
+      {historySale && (
+        <div className="audit-overlay" role="dialog" aria-modal="true" aria-labelledby="audit-title">
+          <div className="audit-dialog">
+            <div className="row">
+              <h2 id="audit-title">Riwayat Edit {historySale.nomor}</h2>
+              <button type="button" aria-label="Tutup riwayat" onClick={() => setHistorySale(null)}>×</button>
+            </div>
+            {salesEditHistory.filter((item) => item.sale_id === historySale.id).map((item) => (
+              <div key={item.id} className="audit-entry">
+                <p className="mu">{item.reason || 'Edit transaksi'} oleh <b>{item.edited_by_name}</b> pada {tstr(item.edited_at)}</p>
+                <div className="audit-columns">
+                  {[['Sebelum', item.before_data], ['Sesudah', item.after_data]].map(([title, data]) => (
+                    <div className="audit-column" key={title}>
+                      <h3>{title}</h3>
+                      <div className="row"><span>Pelanggan</span><b>{auditField(item.before_data, item.after_data, 'pelanggan', title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>WhatsApp</span><b>{auditField(item.before_data, item.after_data, 'wa', title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Layanan</span><b>{auditField(item.before_data, item.after_data, 'items', title === 'Sebelum' ? 'before' : 'after', formatSaleItems)}</b></div>
+                      <div className="row"><span>Subtotal</span><b>{diffText(rp(item.before_data?.subtotal), rp(item.after_data?.subtotal), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Diskon</span><b>{diffText(rp(item.before_data?.diskon), rp(item.after_data?.diskon), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Promo</span><b>{diffText(item.before_data?.promo, item.after_data?.promo, title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Total</span><b>{diffText(rp(item.before_data?.total), rp(item.after_data?.total), title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Metode</span><b>{diffText(item.before_data?.metode, item.after_data?.metode, title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                      <div className="row"><span>Capster</span><b>{diffText(item.before_data?.capster_nama, item.after_data?.capster_nama, title === 'Sebelum' ? 'before' : 'after')}</b></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button type="button" onClick={() => setHistorySale(null)}>Tutup riwayat</button>
+          </div>
+        </div>
+      )}
+
       {editingTrx && (
-        <div className="card">
+        <div className="card edit-transaction-card">
           <h2>Edit Transaksi ({editingTrx.nomor})</h2>
+          <p className="mu">
+            {editingTrx.edit_ts
+              ? `Terakhir diedit ${tstr(editingTrx.edit_ts)} oleh ${editingTrx.edit_oleh || 'staf tidak diketahui'}.`
+              : 'Belum pernah diedit.'}
+          </p>
           <form onSubmit={handleSaveEdit}>
+            <label>Layanan</label>
+            {editItems.map((item, index) => (
+              <div key={`${item.id || item.nama}-${index}`} className="row">
+                <span>{item.nama || 'Layanan tidak diketahui'}</span>
+                <span className="q"><button type="button" onClick={() => setEditItems((prev) => prev.map((v, i) => i === index ? { ...v, qty: Math.max(0, Number(v.qty) - 1) } : v))}>−</button>{item.qty}<button type="button" onClick={() => setEditItems((prev) => prev.map((v, i) => i === index ? { ...v, qty: Number(v.qty) + 1 } : v))}>+</button></span>
+              </div>
+            ))}
+            <select value="" onChange={(e) => { const svc = services.find((v) => v.id === e.target.value); if (svc) setEditItems((prev) => [...prev, { nama: svc.nama, harga: svc.harga, qty: 1, kat: svc.kat }]); }}>
+              <option value="">Tambah layanan…</option>
+              {services.map((svc) => <option key={svc.id} value={svc.id}>{svc.nama} — {rp(svc.harga)}</option>)}
+            </select>
             <label>Pelanggan</label>
             <input
               value={editPelanggan}
@@ -397,12 +493,10 @@ export default function ReportPage({ onReprint }) {
                 </select>
               </div>
               <div>
-                <label>Total (Rp)</label>
-                <input
-                  inputMode="numeric"
-                  value={editTotal}
-                  onChange={(e) => setEditTotal(e.target.value.replace(/\D/g, ''))}
-                />
+                <label>Total otomatis</label>
+                <output className="row" style={{ display: 'flex' }}>
+                  {rp(normalizeSaleItems(editItems).reduce((sum, item) => sum + item.harga * item.qty, 0) - Number(editingTrx.diskon || 0))}
+                </output>
               </div>
             </div>
             {editErr && <div className="err">{editErr}</div>}
@@ -426,10 +520,12 @@ export default function ReportPage({ onReprint }) {
               <th>No</th>
               <th>Waktu</th>
               <th>Pelanggan</th>
+              <th>Jenis</th>
               <th>Layanan</th>
               <th>Capster</th>
               <th>Metode</th>
               <th>Total</th>
+              <th>Audit</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -437,18 +533,27 @@ export default function ReportPage({ onReprint }) {
             {filteredSales.length ? (
               filteredSales.map((s) => (
                 <tr key={s.id}>
-                  <td>
-                    {s.nomor}
-                    {s.edit_ts && <div className="mu">Diedit: {s.edit_oleh}</div>}
-                  </td>
+                  <td>{s.nomor}</td>
                   <td>{tstr(s.ts)}</td>
                   <td>{s.pelanggan}</td>
-                  <td>
-                    {(s.items || []).map((it) => `${it.nama} (${it.qty})`).join(', ')}
-                  </td>
+                  <td>{s.jenis === 'reservasi' ? 'Reservasi' : 'Regular'}</td>
+                  <td>{formatSaleItems(s.items)}</td>
                   <td>{s.capster_nama}</td>
                   <td>{s.metode}</td>
                   <td>{rp(s.total)}</td>
+                  <td className="mu">
+                    {(() => {
+                      const audits = salesEditHistory.filter((item) => item.sale_id === s.id);
+                      const latest = audits[0];
+                      if (!s.edit_ts && !latest) return 'Belum diedit';
+                      return (
+                        <>
+                          <div>{latest?.reason || 'Edit transaksi'} oleh {latest?.edited_by_name || s.edit_oleh || 'staf tidak diketahui'}</div>
+                          <button type="button" onClick={() => setHistorySale(s)}>Lihat riwayat ({audits.length || 1})</button>
+                        </>
+                      );
+                    })()}
+                  </td>
                   <td>
                     <button
                       style={{ padding: '4px 10px' }}
@@ -474,7 +579,7 @@ export default function ReportPage({ onReprint }) {
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="mu">
+                <td colSpan={10} className="mu">
                   Belum ada transaksi pada periode ini.
                 </td>
               </tr>

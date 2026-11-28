@@ -1,9 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import { rp, ld, normWa } from '../utils/format';
 
 const BOOKING_DATE_KEY = 'rove.booking.date';
+const BOOKING_DEVICE_KEY = 'rove.booking.device';
+
+function getBookingDeviceId() {
+  try {
+    let id = localStorage.getItem(BOOKING_DEVICE_KEY);
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem(BOOKING_DEVICE_KEY, id); }
+    return id;
+  } catch { return ''; }
+}
 
 function readBookingDate(today) {
   try {
@@ -30,12 +39,13 @@ export default function BookingPage() {
     services,
     capsters,
     bookedSlots,
-    setView,
+    isCapsterActive,
     refreshAll,
   } = useApp();
 
   const today = ld();
   const [selectedSvcIds, setSelectedSvcIds] = useState([]);
+  const [peopleCount, setPeopleCount] = useState(1);
   const [tanggal, setTanggal] = useState(() => readBookingDate(today));
   const [jam, setJam] = useState('');
   const [kapId, setKapId] = useState('');
@@ -44,6 +54,12 @@ export default function BookingPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [doneBooking, setDoneBooking] = useState(null);
+
+  useEffect(() => {
+    if (peopleCount !== 1 || selectedSvcIds.length || !services.length) return;
+    const firstHairCut = services.filter((s) => s.kat === 'Hair Cut').sort((a, b) => String(a.id).localeCompare(String(b.id)))[0];
+    if (firstHairCut) setSelectedSvcIds([firstHairCut.id]);
+  }, [peopleCount, selectedSvcIds.length, services]);
 
   const timeSlots = useMemo(() => {
     const toMin = (value) => { const [h, m] = String(value).split(':').map(Number); return h * 60 + m; };
@@ -78,9 +94,67 @@ export default function BookingPage() {
   const isSlotFull = (tglStr, jamStr) => capsters.length > 0 && capsters.every((c) => isCapsterBusy(c.id, tglStr, jamStr));
 
   const toggleService = (id) => {
-    setSelectedSvcIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    const svc = services.find((s) => s.id === id);
+    setSelectedSvcIds((prev) => {
+      const count = prev.filter((x) => x === id).length;
+      if (svc?.kat === 'Hair Cut') {
+        if (peopleCount === 1) {
+          return count ? prev : [...prev.filter((selectedId) => services.find((s) => s.id === selectedId)?.kat !== 'Hair Cut'), id];
+        }
+        const hairCutCount = prev.filter((selectedId) => services.find((s) => s.id === selectedId)?.kat === 'Hair Cut').length;
+        return hairCutCount < peopleCount ? [...prev, id] : prev;
+      }
+      return count ? prev.filter((x) => x !== id) : [...prev, id];
+    });
+  };
+
+  const changeExtraQty = (id, delta) => {
+    setSelectedSvcIds((prev) => {
+      const count = prev.filter((x) => x === id).length;
+      const next = count + delta;
+      if (next < 0 || next > peopleCount) return prev;
+      if (delta > 0) return [...prev, id];
+      let removed = false;
+      return prev.filter((x) => {
+        if (x === id && !removed) { removed = true; return false; }
+        return true;
+      });
+    });
+  };
+
+  const changeHairCutQty = (id, delta) => {
+    setSelectedSvcIds((prev) => {
+      const count = prev.filter((x) => x === id).length;
+      const total = prev.filter((selectedId) => services.find((s) => s.id === selectedId)?.kat === 'Hair Cut').length;
+      if (delta > 0 && total >= peopleCount) return prev;
+      if (delta < 0 && (count === 0 || total <= 1)) return prev;
+      if (delta < 0) {
+        let removed = false;
+        return prev.filter((x) => {
+          if (x === id && !removed) { removed = true; return false; }
+          return true;
+        });
+      }
+      return [...prev, id];
+    });
+  };
+
+  const changePeopleCount = (nextCount) => {
+    const next = Math.min(5, Math.max(1, nextCount));
+    setPeopleCount(next);
+    if (next >= peopleCount) return;
+    setSelectedSvcIds((prev) => {
+      let remaining = next;
+      return prev.filter((id) => {
+        const isHairCut = services.find((s) => s.id === id)?.kat === 'Hair Cut';
+        if (!isHairCut) return true;
+        if (remaining > 0) {
+          remaining -= 1;
+          return true;
+        }
+        return false;
+      });
+    });
   };
 
   const handleDateChange = (val) => {
@@ -101,7 +175,12 @@ export default function BookingPage() {
     }
   };
 
-  const selectedServices = services.filter((s) => selectedSvcIds.includes(s.id));
+  const selectedServices = selectedSvcIds.map((id) => services.find((s) => s.id === id)).filter(Boolean);
+  const mainServices = services.filter((s) => !s.kat || s.kat === 'Hair Cut');
+  const extraServices = services.filter((s) => s.kat === 'Extra Service');
+  const selectedMain = selectedServices.filter((s) => !s.kat || s.kat === 'Hair Cut');
+  const selectedExtras = selectedServices.filter((s) => s.kat === 'Extra Service');
+  const selectedHairCutCount = selectedServices.filter((s) => s.kat === 'Hair Cut').length;
   const totalHarga = selectedServices.reduce((sum, s) => sum + s.harga, 0);
   const policyLines = String(brand.pol || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
@@ -115,6 +194,9 @@ export default function BookingPage() {
     if (!selectedSvcIds.length) {
       return setErrorMsg('Pilih minimal satu layanan.');
     }
+    if (selectedHairCutCount !== peopleCount) {
+      return setErrorMsg(`Hair Cut belum lengkap: ${selectedHairCutCount} dari ${peopleCount} orang`);
+    }
     if (!tanggal || !jam) {
       return setErrorMsg('Pilih tanggal dan jam layanan.');
     }
@@ -124,9 +206,12 @@ export default function BookingPage() {
     if (!kapId) {
       return setErrorMsg('Pilih capster terlebih dahulu.');
     }
-    if (!nama.trim()) {
-      return setErrorMsg('Isi nama lengkap Anda.');
+    const namaLengkap = nama.trim();
+    if (namaLengkap.length < 3) {
+      return setErrorMsg('Nama lengkap minimal 3 karakter.');
     }
+    const hairCuts = selectedServices.filter((s) => s.kat === 'Hair Cut');
+    if (!hairCuts.length) return setErrorMsg('Pilih minimal satu layanan Hair Cut.');
     const cleanWa = normWa(wa);
     if (!cleanWa) {
       return setErrorMsg('Nomor WhatsApp tidak valid (contoh: 08123456789).');
@@ -136,11 +221,13 @@ export default function BookingPage() {
     try {
       const { data, error } = await supabase.rpc('buat_booking', {
         p_svc_ids: selectedSvcIds,
+        p_people_count: peopleCount,
         p_tanggal: tanggal,
         p_jam: jam,
         p_kap_id: kapId,
         p_nama: nama.trim(),
         p_wa: cleanWa,
+        p_device_id: getBookingDeviceId(),
       });
       if (error) throw error;
       setDoneBooking(data);
@@ -152,31 +239,13 @@ export default function BookingPage() {
     }
   };
 
-  const resetForm = () => {
-    setDoneBooking(null);
-    setSelectedSvcIds([]);
-    setTanggal(today);
-    clearBookingDate();
-    setJam('');
-    setKapId('');
-    setNama('');
-    setWa('');
-    setErrorMsg('');
-  };
-
   return (
     <div className="wrap">
-      <div className="hb">
+      <header className="booking-hero">
         <img className="hl" src="/logo.jpeg" alt={brand.nama} />
-        <div className="hr">
-          <button className="ghost" onClick={() => setView('login')}>
-            Login Staf
-          </button>
-        </div>
-      </div>
-
-      <h1 className="ht">Book Your Session Now</h1>
-      {brand.jargon && <p className="sub">{brand.jargon}</p>}
+        <h1 className="ht">Book Your Session Now</h1>
+        {brand.jargon && <p className="sub">{brand.jargon}</p>}
+      </header>
 
       {!ready ? (
         <div className="card">
@@ -214,56 +283,81 @@ export default function BookingPage() {
             <span>Estimasi Total</span>
             <b className="tot">{rp(doneBooking.harga)}</b>
           </div>
-          <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-            <button type="button" onClick={resetForm}>
-              Booking Lagi
-            </button>
-          </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form className="booking-form" onSubmit={handleSubmit}>
           <div className="card">
-            <h2>1. Pilih Layanan</h2>
+            <h2>Jumlah Orang</h2>
+            <div className="q" aria-labelledby="people-count-top">
+              <button type="button" aria-label="Kurangi jumlah orang" disabled={peopleCount <= 1} onClick={() => changePeopleCount(peopleCount - 1)}>−</button>
+              <b id="people-count-top" aria-live="polite">{peopleCount}</b>
+              <button type="button" aria-label="Tambah jumlah orang" disabled={peopleCount >= 5} onClick={() => changePeopleCount(peopleCount + 1)}>+</button>
+            </div>
+          </div>
+
+          <div className="card">
+            <h2>Pilih Layanan</h2>
             {services.length === 0 ? (
               <p className="mu">Belum ada daftar layanan tersedia.</p>
             ) : (
               <div className="grid">
-                {services.map((s) => {
-                  const isOn = selectedSvcIds.includes(s.id);
+                {mainServices.map((s) => {
+                  const selectedCount = selectedSvcIds.filter((id) => id === s.id).length;
+                  const isOn = selectedCount > 0;
                   return (
-                    <button
-                      type="button"
+                    <div
                       key={s.id}
                       className={`svc ${isOn ? 'on' : ''}`}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => toggleService(s.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleService(s.id); } }}
                     >
                       <b>{s.nama}</b>
                       <span>
                         {rp(s.harga)} · {s.kat}
                       </span>
-                    </button>
+                      {s.kat === 'Hair Cut' && peopleCount > 1 && selectedCount > 0 && (
+                        <span className="q" onClick={(e) => e.stopPropagation()}>
+                          {selectedCount > 1 ? <button type="button" aria-label={`Kurangi ${s.nama}`} onClick={() => changeHairCutQty(s.id, -1)}>−</button> : <span className="q-spacer" aria-hidden="true" />}
+                          {selectedCount}
+                          <button type="button" aria-label={`Tambah ${s.nama}`} onClick={() => changeHairCutQty(s.id, 1)}>+</button>
+                        </span>
+                      )}
+                    </div>
                   );
                 })}
               </div>
             )}
-            {selectedServices.length > 0 && (
+            {selectedMain.length > 0 && (
               <div className="row" style={{ marginTop: 10 }}>
-                <span>{selectedServices.length} layanan dipilih</span>
-                <b className="tot">{rp(totalHarga)}</b>
+                <span>{selectedMain.length} layanan utama dipilih</span>
+                <b className="tot">{rp(selectedMain.reduce((sum, s) => sum + s.harga, 0))}</b>
               </div>
             )}
           </div>
 
+          {selectedMain.length > 0 && (
+            <div className="extra-sheet" role="region" aria-label="Pilihan extra service">
+              <h3>Extra Service (opsional)</h3>
+              {extraServices.length ? <div className="grid">{extraServices.map((s) => { const qty = selectedSvcIds.filter((id) => id === s.id).length; return peopleCount === 1 ? <button type="button" key={s.id} className={`svc ${qty ? 'on' : ''}`} onClick={() => toggleService(s.id)} aria-pressed={Boolean(qty)}><b>{s.nama}</b><span>{rp(s.harga)}</span></button> : <div key={s.id} className={`svc ${qty ? 'on' : ''}`}><b>{s.nama}</b><span>{rp(s.harga)} · {qty} dari {peopleCount} orang</span><span className="q"><button type="button" aria-label={`Kurangi ${s.nama}`} disabled={!qty} onClick={() => changeExtraQty(s.id, -1)}>−</button><b>{qty}</b><button type="button" aria-label={`Tambah ${s.nama}`} disabled={qty >= peopleCount} onClick={() => changeExtraQty(s.id, 1)}>+</button></span></div>; })}</div> : <p className="mu">Belum ada extra service.</p>}
+            </div>
+          )}
+
           <div className="card">
-            <h2>2. Pilih Tanggal &amp; Jam</h2>
-            <label>Tanggal Kedatangan</label>
+            <h2>Pilih Jadwal</h2>
+            <p className="mu">Hair Cut akan dihitung untuk setiap orang.</p>
+            <h2>Pilih Tanggal &amp; Jam</h2>
+            <label htmlFor="booking-date">Tanggal Kedatangan</label>
             <input
+              id="booking-date"
               type="date"
               min={today}
               value={tanggal}
               onChange={(e) => handleDateChange(e.target.value)}
             />
-            <label>Jam Layanan (WIB)</label>
+            <label id="booking-time-label">Jam Layanan (WIB)</label>
+            {!timeSlots.some((slot) => isSlotAllowed(tanggal, slot)) && <p className="mu">Tidak ada slot tersedia minimal 60 menit dari sekarang. Silakan pilih tanggal lain.</p>}
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(84px, 1fr))', marginTop: 6 }}>
               {timeSlots.map((slot) => {
                 const allowed = isSlotAllowed(tanggal, slot);
@@ -272,11 +366,13 @@ export default function BookingPage() {
                   <button
                     type="button"
                     key={slot}
-                    className={jam === slot ? 'on' : ''}
+                    aria-describedby="booking-time-label"
+                    className={`${jam === slot ? 'on' : ''} ${full ? 'unavailable' : ''}`}
                     disabled={!allowed || full}
+                    aria-label={`${slot}${full ? ', penuh' : ''}`}
                     onClick={() => handleSelectTime(slot)}
                   >
-                    {isSlotFull(tanggal, slot) ? 'Penuh' : slot}
+                    <span>{slot}</span>{full && <small>Penuh</small>}
                   </button>
                 );
               })}
@@ -284,15 +380,14 @@ export default function BookingPage() {
           </div>
 
           <div className="card">
-            <h2>3. Pilih Capster</h2>
-            {!jam ? (
-              <p className="mu">Pilih tanggal dan jam terlebih dahulu untuk melihat ketersediaan capster.</p>
-            ) : capsters.length === 0 ? (
+            <h2>Pilih Capster</h2>
+            {capsters.length === 0 ? (
               <p className="mu">Belum ada data capster.</p>
             ) : (
               <div className="grid">
                 {capsters.map((c) => {
-                  const busy = isCapsterBusy(c.id, tanggal, jam);
+                  const inactive = !isCapsterActive(c.id);
+                  const busy = inactive || (Boolean(jam) && isCapsterBusy(c.id, tanggal, jam));
                   return (
                     <button
                       type="button"
@@ -307,7 +402,7 @@ export default function BookingPage() {
                         <i>✂️</i>
                       )}
                       <b>{c.name}</b>
-                      <span>{busy ? 'Penuh di jam ini' : 'Tersedia'}</span>
+                      <span>{inactive ? 'Sedang tidak shift' : busy ? 'Penuh di jam ini' : jam ? 'Tersedia' : 'Pilih jam untuk cek'}</span>
                     </button>
                   );
                 })}
@@ -316,11 +411,13 @@ export default function BookingPage() {
           </div>
 
           <div className="card">
-            <h2>4. Data Pemesan</h2>
+            <h2>Data Pemesan</h2>
             <label>Nama Lengkap</label>
             <input
               type="text"
+              minLength={3}
               maxLength={60}
+              required
               placeholder="Contoh: Jhon Doe"
               value={nama}
               onChange={(e) => setNama(e.target.value)}
@@ -332,13 +429,20 @@ export default function BookingPage() {
               value={wa}
               onChange={(e) => setWa(e.target.value)}
             />
-            {errorMsg && <div className="err">{errorMsg}</div>}
-            <button
-              type="submit"
-              className="p"
-              style={{ width: '100%', marginTop: 6 }}
-              disabled={submitting}
-            >
+          </div>
+
+          <div className="card booking-summary">
+            <b>Ringkasan Booking</b>
+            {selectedHairCutCount !== peopleCount && (
+              <div className="err booking-error" role="alert">
+                Hair Cut belum lengkap: {selectedHairCutCount} dari {peopleCount} orang
+              </div>
+            )}
+            {errorMsg && <div className="err booking-error" role="alert">{errorMsg}</div>}
+            <div className="mu">Layanan: {selectedMain.map((s) => s.nama).join(', ') || 'Belum dipilih'}</div>
+            {selectedExtras.length > 0 && <div className="mu">Extra: {selectedExtras.map((s) => s.nama).join(', ')}</div>}
+            <strong>{rp(totalHarga)}</strong>
+            <button type="submit" className="p" style={{ width: '100%', marginTop: 14 }} disabled={submitting}>
               {submitting ? 'Memproses Reservasi...' : 'Konfirmasi Booking'}
             </button>
           </div>

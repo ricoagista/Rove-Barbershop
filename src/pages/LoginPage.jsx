@@ -9,6 +9,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const loginKey = 'rove.login.failures';
+  const getLock = () => { try { return JSON.parse(localStorage.getItem(loginKey) || '{}'); } catch { return {}; } };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -23,6 +25,8 @@ export default function LoginPage() {
       return setErrorMsg('Username dan password wajib diisi.');
     }
 
+    const lock = getLock();
+    if (lock.until && lock.until > Date.now()) return setErrorMsg(`Login diblokir sementara. Coba lagi dalam ${Math.ceil((lock.until - Date.now()) / 60000)} menit.`);
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -30,8 +34,12 @@ export default function LoginPage() {
         password,
       });
       if (error) {
-        throw new Error('Username atau password salah.');
+        const next = { count: (lock.count || 0) + 1 };
+        if (next.count >= 10) next.until = Date.now() + 60 * 60 * 1000;
+        localStorage.setItem(loginKey, JSON.stringify(next));
+        throw new Error(next.until ? 'Terlalu banyak percobaan gagal. Login diblokir selama 1 jam.' : 'Username atau password salah.');
       }
+      localStorage.removeItem(loginKey);
       setView('home');
     } catch (err) {
       setErrorMsg(err.message);
@@ -82,7 +90,7 @@ export default function LoginPage() {
           type="button"
           className="ghost"
           style={{ width: '100%', marginTop: 12 }}
-          onClick={() => setView('home')}
+          onClick={() => window.location.assign('/')}
         >
           ← Kembali ke Halaman Booking
         </button>

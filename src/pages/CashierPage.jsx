@@ -11,16 +11,17 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     services,
     promos,
     bookings,
-    sales,
     capsters,
+    isCapsterActive,
     isServiceOpen,
     refreshAll,
   } = useApp();
 
   const [cart, setCart] = useState({});
+  const hairCutCount = Object.entries(cart).reduce((sum, [id, qty]) => sum + (services.find((s) => s.id === id)?.kat === 'Hair Cut' ? qty : 0), 0);
   const [promoId, setPromoId] = useState('');
   const [capsterId, setCapsterId] = useState('');
-  const [ptype, setPtype] = useState('baru'); // 'baru' | 'lama' | 'reservasi'
+  const [ptype, setPtype] = useState('regular'); // 'regular' | 'reservasi'
   const [bkId, setBkId] = useState('');
   const [custName, setCustName] = useState('');
   const [custWa, setCustWa] = useState('');
@@ -32,19 +33,6 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   const [localReceipt, setLocalReceipt] = useState(null);
 
   const activeReceipt = externalReceipt || localReceipt;
-
-  // Daftar pelanggan unik dari riwayat transaksi untuk opsi Pelanggan Lama
-  const pastCustomers = useMemo(() => {
-    const map = {};
-    [...sales]
-      .sort((a, b) => new Date(a.ts) - new Date(b.ts))
-      .forEach((s) => {
-        if (s.wa) {
-          map[s.wa] = { nama: s.pelanggan || '', wa: s.wa };
-        }
-      });
-    return Object.values(map).sort((a, b) => a.nama.localeCompare(b.nama));
-  }, [sales]);
 
   // Daftar reservasi aktif (Baru / Hadir)
   const activeBookings = useMemo(() => {
@@ -76,14 +64,31 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   const bayarNum = Number(bayar) || 0;
 
   const addItem = (id) => {
+    if (me.role === 'capster' && ptype === 'regular' && !isCapsterActive(me.id)) {
+      setErr('Anda sedang tidak shift dan tidak dapat melayani transaksi regular.');
+      return;
+    }
+    if (ptype === 'reservasi' && !bkId) {
+      setErr('Pilih reservasi terlebih dulu untuk memuat layanan.');
+      return;
+    }
+    const svc = services.find((s) => s.id === id);
+    if (svc?.kat === 'Hair Cut' && (cart[id] || 0) >= 1 && ptype === 'regular') {
+      setErr('Hair Cut sudah dipilih. Gunakan jumlah orang untuk menambah Hair Cut.');
+      return;
+    }
     setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
     setErr('');
   };
 
   const changeQty = (id, delta) => {
+    const svc = services.find((s) => s.id === id);
     setCart((prev) => {
       const next = { ...prev };
-      const val = (next[id] || 0) + delta;
+      const current = next[id] || 0;
+      const hairCount = Object.entries(prev).reduce((sum, [serviceId, qty]) => sum + (services.find((s) => s.id === serviceId)?.kat === 'Hair Cut' ? qty : 0), 0);
+      const maxQty = svc?.kat === 'Hair Cut' ? (ptype === 'reservasi' ? Math.max(hairCount, current) : hairCount + 1) : Infinity;
+      const val = Math.min(maxQty, current + delta);
       if (val <= 0) delete next[id];
       else next[id] = val;
       return next;
@@ -95,13 +100,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     setCustName('');
     setCustWa('');
     setBkId('');
+    setCart({});
+    setCapsterId('');
     setErr('');
-  };
-
-  const handlePickPastCustomer = (waVal) => {
-    const found = pastCustomers.find((c) => c.wa === waVal);
-    setCustName(found ? found.nama : '');
-    setCustWa(found ? found.wa : '');
   };
 
   const handlePickBooking = (id) => {
@@ -137,6 +138,10 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       return setErr('Tekan Open Service dulu untuk memulai transaksi.');
     }
 
+    if (me.role === 'capster' && !isCapsterActive(me.id)) {
+      return setErr('Anda sedang tidak shift dan tidak dapat dipilih untuk transaksi.');
+    }
+
     const activeCap =
       me.role === 'capster'
         ? { id: me.id, name: me.name }
@@ -145,21 +150,18 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     if (!activeCap) {
       return setErr('Pilih capster yang melayani.');
     }
-    if (!custName.trim()) {
-      return setErr(
-        ptype === 'lama'
-          ? 'Pilih pelanggan terlebih dulu.'
-          : ptype === 'reservasi'
-          ? 'Pilih reservasi terlebih dulu.'
-          : 'Nama pelanggan wajib diisi.'
-      );
+    if (!isCapsterActive(activeCap.id)) {
+      return setErr('Capster tersebut sedang tidak shift dan tidak dapat dipilih.');
     }
-    if (!custWa.trim()) {
-      return setErr('Kontak WhatsApp wajib diisi.');
+    if (!hairCutCount) {
+      return setErr('Pilih minimal satu layanan Hair Cut.');
     }
-    const cleanWa = normWa(custWa);
-    if (!cleanWa) {
-      return setErr('Nomor WhatsApp tidak valid. Contoh: 081234567890.');
+    if (ptype === 'reservasi' && !bkId) {
+      return setErr('Pilih reservasi terlebih dulu.');
+    }
+    const cleanWa = custWa.trim() ? normWa(custWa) : '';
+    if (ptype === 'reservasi' && !cleanWa) {
+      return setErr('Nomor WhatsApp reservasi tidak valid.');
     }
     if (metode === 'Tunai' && bayarNum < total) {
       return setErr('Uang diterima kurang dari total.');
@@ -169,10 +171,11 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     try {
       const now = new Date();
       const itemsPayload = cartEntries.map(({ svc, qty }) => ({
+        id: svc.id,
         nama: svc.nama,
-        harga: svc.harga,
+        harga: Number(svc.harga) || 0,
+        kat: svc.kat,
         qty,
-        kat: svc.kat || 'Hair Cut',
       }));
 
       const payload = {
@@ -181,7 +184,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         kasir_nama: me.name,
         capster_id: activeCap.id,
         capster_nama: activeCap.name,
-        jenis: ptype,
+        jenis: ptype === 'regular' ? 'baru' : 'reservasi',
         booking_id: ptype === 'reservasi' && bkId ? bkId : null,
         items: itemsPayload,
         subtotal,
@@ -189,8 +192,8 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         promo: diskon > 0 && selectedPromo ? selectedPromo.nama : '',
         total,
         metode,
-        pelanggan: custName.trim(),
-        wa: cleanWa,
+        pelanggan: custName.trim() || 'Regular',
+        wa: cleanWa || '',
         diterima: metode === 'Tunai' ? bayarNum : total,
         kembali: metode === 'Tunai' ? bayarNum - total : 0,
       };
@@ -204,7 +207,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       setCustName('');
       setCustWa('');
       setPromoId('');
-      setPtype('baru');
+      setPtype('regular');
       setBkId('');
       setCapsterId('');
       await refreshAll();
@@ -273,7 +276,51 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       )}
 
       <div className="card">
-        <h2>Pilih layanan</h2>
+        <h2>Jenis pelanggan</h2>
+        <div className="two" style={{ marginBottom: 10 }}>
+          <button type="button" className={ptype === 'regular' ? 'on' : ''} onClick={() => handleSelectPtype('regular')}>
+            Regular
+          </button>
+          <button type="button" className={ptype === 'reservasi' ? 'on' : ''} onClick={() => handleSelectPtype('reservasi')}>
+            Reservasi
+          </button>
+        </div>
+        {ptype === 'reservasi' ? (
+          activeBookings.length ? (
+            <div className="booking-picker">
+              <label htmlFor="cashier-booking">Pilih reservasi</label>
+              <div className="booking-options" role="listbox" aria-label="Daftar reservasi aktif">
+                {activeBookings.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    role="option"
+                    aria-selected={bkId === b.id}
+                    className={`booking-option ${bkId === b.id ? 'selected' : ''}`}
+                    onClick={() => handlePickBooking(b.id)}
+                  >
+                    <span className="booking-option-time">{b.jam}</span>
+                    <span className="booking-option-info">
+                      <strong>{b.nama}</strong>
+                      <span>{b.tanggal} · {b.svc_nama}</span>
+                    </span>
+                    <span className={`booking-option-status ${me.role === 'capster' && b.kap_id !== me.id ? 'booking-warning' : ''}`}>
+                      {bkId === b.id ? 'Dipilih' : me.role === 'capster' && b.kap_id !== me.id ? <><svg className="warning-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 21 20H3L12 4Z" /><path d="M12 9v5m0 3h.01" /></svg>Bukan untuk Anda</> : 'Pilih'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {pickedBooking && me.role === 'capster' && pickedBooking.kap_id !== me.id ? (
+                <p className="booking-warning-message"><svg className="warning-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 21 20H3L12 4Z" /><path d="M12 9v5m0 3h.01" /></svg><span>Reservasi ini ditujukan untuk {pickedBooking.kap_nama || 'capster lain'}. Pastikan pergantian capster sudah disetujui.</span></p>
+              ) : !pickedBooking ? <p className="booking-picker-hint">Pilih reservasi untuk mengisi pelanggan dan layanan secara otomatis.</p> : null}
+            </div>
+          ) : <p className="mu">Belum ada reservasi aktif.</p>
+        ) : null}
+      </div>
+
+      <div className={`card service-picker ${ptype === 'reservasi' && !bkId ? 'service-picker-locked' : ''}`}>
+        <h2>{ptype === 'reservasi' ? 'Tambah layanan' : 'Pilih layanan'}</h2>
+        {ptype === 'reservasi' && !bkId && <p className="booking-picker-hint">Pilih reservasi terlebih dahulu untuk membuka layanan.</p>}
         {KATS.map((kat) => {
           const list = services.filter((v) => (v.kat || 'Hair Cut') === kat);
           if (!list.length) return null;
@@ -284,7 +331,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
               </div>
               <div className="grid">
                 {list.map((v) => (
-                  <button key={v.id} className="svc" onClick={() => addItem(v.id)}>
+                  <button key={v.id} className="svc" disabled={ptype === 'reservasi' && !bkId} onClick={() => addItem(v.id)}>
                     <b>{v.nama}</b>
                     <span>{rp(v.harga)}</span>
                   </button>
@@ -297,6 +344,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
 
       <div className="card">
         <h2>Keranjang</h2>
+        <p className="mu">Jumlah orang: {hairCutCount}</p>
         {cartEntries.length ? (
           cartEntries.map(({ svc, qty }) => (
             <div key={svc.id} className="row">
@@ -316,15 +364,41 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           <p className="mu">Belum ada pilihan.</p>
         )}
 
-        <label>Promo</label>
-        <select value={promoId} onChange={(e) => setPromoId(e.target.value)}>
-          <option value="">Tanpa promo</option>
-          {promos.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nama} — {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)}
-            </option>
-          ))}
-        </select>
+        <div className="promo-picker">
+          <label>Pilih promo</label>
+          <div className="promo-options" role="listbox" aria-label="Daftar promo">
+            <button
+              type="button"
+              role="option"
+              aria-selected={!promoId}
+              className={`promo-option ${!promoId ? 'selected' : ''}`}
+              onClick={() => setPromoId('')}
+            >
+              <span className="promo-option-info">
+                <strong>Tanpa promo</strong>
+                <span>Harga normal</span>
+              </span>
+              <span className="promo-option-status">{!promoId ? 'Dipilih' : 'Pilih'}</span>
+            </button>
+            {promos.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                role="option"
+                aria-selected={promoId === p.id}
+                className={`promo-option ${promoId === p.id ? 'selected' : ''} ${(p.kuota || 0) <= (p.terpakai || 0) ? 'disabled' : ''}`}
+                onClick={() => (p.kuota || 0) > (p.terpakai || 0) && setPromoId(p.id)}
+                disabled={(p.kuota || 0) <= (p.terpakai || 0)}
+              >
+                <span className="promo-option-info">
+                  <strong>{p.nama}</strong>
+                  <span>Potongan {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)} · Sisa kuota: {Math.max(0, (p.kuota || 0) - (p.terpakai || 0))}</span>
+                </span>
+                <span className="promo-option-status">{promoId === p.id ? 'Dipilih' : 'Pilih'}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {diskon > 0 && (
           <>
@@ -351,7 +425,8 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           </div>
         ) : (
           <>
-            <label>Dilayani Capster *</label>
+            <label>Dilayani Capster</label>
+            {ptype === 'reservasi' && pickedBooking && <p className="booking-picker-hint">Default reservasi: {pickedBooking.kap_nama || 'belum ditentukan'}. Anda dapat menggantinya.</p>}
             <select value={capsterId} onChange={(e) => setCapsterId(e.target.value)}>
               <option value="">Pilih capster</option>
               {capsters.map((c) => (
@@ -363,96 +438,19 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           </>
         )}
 
-        <label>Jenis pelanggan *</label>
-        <div className="two" style={{ marginBottom: 10 }}>
-          <button
-            className={ptype === 'baru' ? 'on' : ''}
-            onClick={() => handleSelectPtype('baru')}
-          >
-            Pelanggan baru
-          </button>
-          <button
-            className={ptype === 'lama' ? 'on' : ''}
-            onClick={() => handleSelectPtype('lama')}
-          >
-            Pelanggan lama
-          </button>
-          <button
-            className={ptype === 'reservasi' ? 'on' : ''}
-            style={{ gridColumn: '1 / -1' }}
-            onClick={() => handleSelectPtype('reservasi')}
-          >
-            Pelanggan Reservasi
-          </button>
-        </div>
-
-        {ptype === 'lama' ? (
-          pastCustomers.length ? (
-            <>
-              <label>Pilih pelanggan *</label>
-              <select value={custWa} onChange={(e) => handlePickPastCustomer(e.target.value)}>
-                <option value="">Pilih pelanggan…</option>
-                {pastCustomers.map((c) => (
-                  <option key={c.wa} value={c.wa}>
-                    {c.nama} — {c.wa}
-                  </option>
-                ))}
-              </select>
-            </>
-          ) : (
-            <p className="mu">Belum ada pelanggan tersimpan. Gunakan Pelanggan baru dulu.</p>
-          )
-        ) : ptype === 'reservasi' ? (
-          activeBookings.length ? (
-            <>
-              <label>Pilih reservasi *</label>
-              <select value={bkId} onChange={(e) => handlePickBooking(e.target.value)}>
-                <option value="">Pilih reservasi…</option>
-                {activeBookings.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.tanggal} {b.jam} · {b.nama} · {b.svc_nama}
-                  </option>
-                ))}
-              </select>
-              {pickedBooking && (
-                <p className="mu">
-                  {pickedBooking.nama} · {pickedBooking.wa} · Capster {pickedBooking.kap_nama}
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="mu">Belum ada reservasi aktif.</p>
-          )
-        ) : (
-          <>
-            <label>Nama pelanggan *</label>
-            <input
-              value={custName}
-              onChange={(e) => setCustName(e.target.value)}
-              autoComplete="off"
-            />
-            <label>Kontak WhatsApp * (contoh 081234567890)</label>
-            <input
-              type="tel"
-              inputMode="tel"
-              value={custWa}
-              onChange={(e) => setCustWa(e.target.value)}
-              autoComplete="off"
-            />
-          </>
-        )}
-
-        <label>Metode bayar *</label>
-        <div className="two" style={{ marginBottom: 10 }}>
-          {['Tunai', 'QRIS'].map((m) => (
-            <button
-              key={m}
-              className={metode === m ? 'on' : ''}
-              onClick={() => setMetode(m)}
-            >
-              {m}
-            </button>
-          ))}
+        <div className="payment-section">
+          <label>Metode bayar</label>
+          <div className="two payment-methods">
+            {['Tunai', 'QRIS'].map((m) => (
+              <button
+                key={m}
+                className={metode === m ? 'on' : ''}
+                onClick={() => setMetode(m)}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
         </div>
 
         {subtotal > 0 && total === 0 ? (
@@ -461,26 +459,28 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           </p>
         ) : metode === 'Tunai' ? (
           <>
-            <label>Uang diterima *</label>
-            <input
-              inputMode="numeric"
-              value={bayar}
-              onChange={(e) => setBayar(e.target.value.replace(/\D/g, ''))}
-            />
-            {bayarNum >= total && total > 0 && (
-              <div className="mu">Kembalian: {rp(bayarNum - total)}</div>
-            )}
-            <button style={{ margin: '6px 0' }} onClick={() => setBayar(String(total))}>
-              Uang pas
-            </button>
+            <div className="cash-payment-fields">
+              <label>Uang diterima *</label>
+              <input
+                inputMode="numeric"
+                value={bayar}
+                onChange={(e) => setBayar(e.target.value.replace(/\D/g, ''))}
+              />
+              {bayarNum >= total && total > 0 && (
+                <div className="mu">Kembalian: {rp(bayarNum - total)}</div>
+              )}
+              <button onClick={() => setBayar(String(total))}>
+                Uang pas
+              </button>
+            </div>
           </>
         ) : (
-          <p className="mu">Pastikan pembayaran QRIS sudah masuk sebelum menekan Bayar.</p>
+          <p className="payment-hint"><svg className="payment-hint-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M7 9h10M7 13h4" /></svg><span>Pastikan pembayaran QRIS sudah masuk sebelum menekan Bayar.</span></p>
         )}
 
         {err && <div className="err">{err}</div>}
         <button
-          className="p"
+          className="p cashier-pay-button"
           style={{ width: '100%', marginTop: 6 }}
           disabled={!subtotal || !isServiceOpen || saving}
           onClick={handlePay}

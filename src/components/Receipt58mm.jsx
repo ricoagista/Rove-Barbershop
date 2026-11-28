@@ -3,7 +3,16 @@ import { useApp } from '../context/AppContext';
 import { rp, fmtPhone } from '../utils/format';
 
 export default function Receipt58mm({ trx }) {
-  const { brand, kontak, notaConfig } = useApp();
+  const { brand, kontak, notaConfig, services } = useApp();
+  const [promoReady, setPromoReady] = React.useState(!notaConfig.img);
+
+  React.useEffect(() => {
+    if (!notaConfig.img) return setPromoReady(true);
+    const image = new Image();
+    image.onload = () => setPromoReady(true);
+    image.onerror = () => setPromoReady(false);
+    image.src = notaConfig.img;
+  }, [notaConfig.img]);
   if (!trx) return null;
 
   const tg = new Date(trx.ts).toLocaleString('id-ID', {
@@ -15,14 +24,16 @@ export default function Receipt58mm({ trx }) {
     minute: '2-digit',
   });
 
-  const isLama = trx.jenis === 'lama' || trx.lama === true;
-  const rawMsg = isLama
-    ? notaConfig.msgLama == null
-      ? 'Terimakasih Sudah Menjadi RVB Fams'
-      : notaConfig.msgLama
-    : notaConfig.msgBaru == null
-    ? 'Sampaikan pengalaman baik Anda pada Kawan\nJika ada kurang puas info kami GARANASI 24 Jam'
-    : notaConfig.msgBaru;
+  const receiptItems = (trx.items || []).map((item) => {
+    const service = services.find((s) => s.id === item.id || s.nama === item.nama);
+    const qty = Number(item.qty) || 0;
+    const harga = Number(item.harga ?? service?.harga) || 0;
+    return { ...item, nama: item.nama || service?.nama || '-', qty, harga };
+  }).filter((item) => item.qty > 0);
+  const isReservasi = trx.jenis === 'reservasi';
+  const rawMsg = isReservasi
+    ? notaConfig.msgReservasi ?? notaConfig.msgLama ?? 'Terima kasih sudah melakukan reservasi di Rove Barbershop.'
+    : notaConfig.msgRegular ?? notaConfig.msgBaru ?? 'Sampaikan pengalaman baik Anda pada Kawan\nJika ada kurang puas info kami GARANSI 24 Jam';
 
   const Row = ({ left, right, big }) => (
     <table className={`nt ${big ? 'big' : ''}`}>
@@ -62,15 +73,17 @@ export default function Receipt58mm({ trx }) {
       <Row left="Pelanggan" right={trx.pelanggan || '-'} />
       {trx.wa && <Row left="WA" right={trx.wa} />}
       <hr />
-      {(trx.items || []).map((item, idx) => (
-        <React.Fragment key={idx}>
-          <div>{item.nama}</div>
-          <Row
-            left={`${item.qty} x ${new Intl.NumberFormat('id-ID').format(item.harga)}`}
-            right={new Intl.NumberFormat('id-ID').format(item.harga * item.qty)}
-          />
-        </React.Fragment>
-      ))}
+      <div className="receipt-items">
+        {receiptItems.map((item, idx) => (
+          <div className="receipt-item" key={idx}>
+            <div className="receipt-item-name">{item.nama}</div>
+            <div className="receipt-item-detail">
+              <span>{item.qty} x {rp(item.harga)}</span>
+              <b>{rp(item.harga * item.qty)}</b>
+            </div>
+          </div>
+        ))}
+      </div>
       <hr />
       {trx.diskon > 0 && (
         <>
@@ -100,9 +113,9 @@ export default function Receipt58mm({ trx }) {
           <hr />
         </>
       )}
-      {notaConfig.img && (
+      {notaConfig.img && promoReady && (
         <>
-          <img className="ni" src={notaConfig.img} alt="Promo Nota" />
+          <img className="ni" src={notaConfig.img} alt="Promo Nota" onLoad={() => setPromoReady(true)} />
           <hr />
         </>
       )}
