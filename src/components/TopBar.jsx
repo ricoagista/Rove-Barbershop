@@ -76,8 +76,11 @@ export default function TopBar({ onSelectTab }) {
     <>
       <div className="top-shift-bar">
         <div className="top-user-info">
-          <strong><span className="nav-icon">{icons.profile}</span><span>{me.name}</span></strong>
-          <span><span className="nav-icon role-icon">{icons.akun}</span><span>{roleName(me.role)}</span></span>
+          {me.photo_url ? <img className="top-user-avatar" src={me.photo_url} alt="" /> : <span className="top-user-fallback" aria-hidden="true">{icons.profile}</span>}
+          <div>
+            <strong>{me.name}</strong>
+            <span>{roleName(me.role)}</span>
+          </div>
         </div>
         <button className={`shift-button ${isServiceOpen ? 'close' : 'open'}`} disabled={shiftBusy} onClick={handleShift}>
           {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}

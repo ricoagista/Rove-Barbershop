@@ -169,29 +169,56 @@ h2 {
 
 .top-user-info {
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-user-info > div {
+  min-width: 0;
   display: grid;
   gap: 2px;
 }
 
-.top-user-info strong,
-.top-user-info > span {
-  display: flex;
+.top-user-avatar,
+.top-user-fallback {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+}
+
+.top-user-avatar {
+  object-fit: cover;
+}
+
+.top-user-fallback {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  color: var(--accent-text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.top-user-fallback svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.top-user-info strong,
+.top-user-info span {
   overflow-wrap: anywhere;
 }
 
-.top-user-info strong {
-  color: var(--text);
-}
-
-.top-user-info > span {
+.top-user-info span {
   color: var(--muted);
   font-size: 13px;
-}
-
-.top-user-info .nav-icon {
-  flex: 0 0 20px;
 }
 
 .shift-button {
