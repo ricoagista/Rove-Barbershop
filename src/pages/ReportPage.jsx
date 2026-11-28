@@ -420,7 +420,7 @@ export default function ReportPage({ onReprint }) {
             </div>
             {salesEditHistory.filter((item) => item.sale_id === historySale.id).map((item) => (
               <div key={item.id} className="audit-entry">
-                <p className="mu">Diedit oleh <b>{item.edited_by_name}</b> pada {tstr(item.edited_at)}</p>
+                <p className="mu">{item.reason || 'Edit transaksi'} oleh <b>{item.edited_by_name}</b> pada {tstr(item.edited_at)}</p>
                 <div className="audit-columns">
                   {[['Sebelum', item.before_data], ['Sesudah', item.after_data]].map(([title, data]) => (
                     <div className="audit-column" key={title}>
