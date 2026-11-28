@@ -66,7 +66,7 @@ export default function ProfilePage() {
         <h1>Profil Saya</h1>
         {error && <p className="err">{error}</p>}
         {message && <p className="ok">{message}</p>}
-        <form className="profile-form" onSubmit={saveProfile}>
+        <form onSubmit={saveProfile}>
           <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} /></label>
           <label>Nomor WhatsApp<input value={form.wa} onChange={(e) => setForm({ ...form, wa: e.target.value })} inputMode="tel" maxLength={20} /></label>
           <label>Foto profil<input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e.target.files?.[0])} /></label>
