@@ -1,4 +1,4 @@
-# Rove Barbershop
+# Rove-Barbershop
 
 Aplikasi reservasi dan operasional Rove Barbershop.
 
