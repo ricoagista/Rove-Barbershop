@@ -313,7 +313,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       <div className={`card service-picker ${ptype === 'reservasi' && !bkId ? 'service-picker-locked' : ''}`}>
         <h2>{ptype === 'reservasi' ? 'Tambah layanan' : 'Pilih layanan'}</h2>
         {ptype === 'reservasi' && !bkId && <p className="booking-picker-hint">Pilih reservasi terlebih dahulu untuk membuka layanan.</p>}
-        {KATS.map((kat) => { 
+        {KATS.map((kat) => {
           const list = services.filter((v) => (v.kat || 'Hair Cut') === kat);
           if (!list.length) return null;
           return (
