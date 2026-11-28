@@ -60,7 +60,7 @@ export default function TopBar({ onSelectTab }) {
       <div className="top-shift-bar">
         <div className="top-user-info">
           <strong>{me.name}</strong>
-          <span>@{me.username} · {roleName(me.role)}</span>
+          <span>{roleName(me.role)}</span>
         </div>
         <button className={`shift-button ${isServiceOpen ? 'close' : 'open'}`} disabled={shiftBusy} onClick={handleShift}>
           {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
