@@ -12,6 +12,7 @@ import ServiceManagePage from './pages/ServiceManagePage';
 import PromoManagePage from './pages/PromoManagePage';
 import AccountManagePage from './pages/AccountManagePage';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 
 function MainRouter() {
   const { isConfigured, ready, sessionUser, me, tab, setTab, logout } = useApp();
@@ -76,14 +77,16 @@ function MainRouter() {
     };
 
     const settingsPath = path.startsWith('/pengaturan/') ? path : '/pengaturan/policy';
-    const profilePath = path === '/profile';
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const openProfile = () => { setSidebarOpen(false); navigate('/profile'); };
 
     return (
-      <div className="wrap">
-        <TopBar onSelectTab={handleTabChange} onProfile={() => navigate('/profile')} />
+      <div className="app-shell">
+        <TopBar onSelectTab={(key) => { setSidebarOpen(false); handleTabChange(key); }} onOpenProfile={openProfile} sidebarOpen={sidebarOpen} onToggleSidebar={() => setSidebarOpen((open) => !open)} />
+        <div className="wrap">
 
         <main>
-        {profilePath ? <div className="card profile-page"><h2>{me.name}</h2><p className="mu">{me.username ? `@${me.username}` : ''}</p><p>{me.name} · {me.role}</p><button className="d" onClick={logout}>Keluar</button></div> : tab === 'kasir' && (
+        {tab === 'kasir' && (
           <CashierPage
             externalReceipt={reprintReceipt}
             onClearExternalReceipt={() => setReprintReceipt(null)}
@@ -96,8 +99,10 @@ function MainRouter() {
         {tab === 'layanan' && isOwner && <ServiceManagePage />}
         {tab === 'akun' && isOwner && <AccountManagePage />}
         {tab === 'pengaturan' && isOwner && <SettingsPage initialPath={settingsPath} onNavigate={navigate} />}
+        {tab === 'profile' && <ProfilePage />}
         {tab === 'laporan' && isOwner && <ReportPage onReprint={handleReprint} />}
         </main>
+        </div>
       </div>
     );
   }

@@ -1,124 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
-import { roleName } from '../utils/format';
 
-export default function TopBar({ onSelectTab, onProfile }) {
-  const {
-    me,
-    brand,
-    tab,
-    setTab,
-    isServiceOpen,
-    openService,
-    closeService,
-    logout,
-    newBkCount,
-    setNewBkCount,
-  } = useApp();
-
-  const [confirmClose, setConfirmClose] = useState(false);
-  const [busyShift, setBusyShift] = useState(false);
-
-  useEffect(() => {
-    if (!confirmClose) return;
-    const t = setTimeout(() => setConfirmClose(false), 4000);
-    return () => clearTimeout(t);
-  }, [confirmClose]);
-
+export default function TopBar({ onSelectTab, onOpenProfile, sidebarOpen, onToggleSidebar }) {
+  const { me, tab, setTab, newBkCount, setNewBkCount } = useApp();
   if (!me) return null;
-
   const isOwner = me.role === 'owner';
-  const tabs = isOwner
-    ? [
-        ['kasir', 'Kasir'],
-        ['reservasi', 'Reservasi'],
-        ['promo', 'Promo'],
-        ['layanan', 'Layanan'],
-        ['akun', 'Akun'],
-        ['pengeluaran', 'Pengeluaran'],
-        ['pengaturan', 'Pengaturan'],
-        ['laporan', 'Laporan'],
-      ]
-    : [
-        ['kasir', 'Kasir'],
-        ['reservasi', 'Reservasi'],
-        ['pengeluaran', 'Pengeluaran'],
-        ['daftar', 'Daftar Transaksi'],
-      ];
-
-  const handleShiftClick = async () => {
-    if (busyShift) return;
-    if (!isServiceOpen) {
-      setBusyShift(true);
-      try {
-        await openService();
-      } finally {
-        setBusyShift(false);
-      }
-    } else {
-      if (!confirmClose) {
-        setConfirmClose(true);
-      } else {
-        setBusyShift(true);
-        setConfirmClose(false);
-        try {
-          await closeService();
-        } finally {
-          setBusyShift(false);
-        }
-      }
-    }
-  };
-
-  const handleTabChange = (key) => {
-    setTab(key);
-    if (key === 'reservasi') setNewBkCount(0);
-    if (onSelectTab) onSelectTab(key);
-  };
-
-  return (
-    <>
-      <div className="bar">
-        <img src="/logo.jpeg" alt="Logo" />
-        <div className="t">
-          <b>{brand.nama}</b>
-          {brand.jargon && (
-            <>
-              <span>{brand.jargon}</span>
-              <br />
-            </>
-          )}
-          <span>
-            {me.name} · {roleName(me.role)}
-          </span>
-        </div>
-        <button
-          className={isServiceOpen ? 'cl' : 'ok'}
-          disabled={busyShift}
-          onClick={handleShiftClick}
-        >
-          {isServiceOpen
-            ? confirmClose
-              ? 'Yakin Close?'
-              : 'Close Service'
-            : 'Open Service'}
-        </button>
-        <button className="profile-button" onClick={onProfile}>Profil</button>
-        <button onClick={logout}>Keluar</button>
-      </div>
-
-      <div className="tabs">
-        {tabs.map(([key, label]) => (
-          <button
-            key={key}
-            className={tab === key ? 'on' : ''}
-            onClick={() => handleTabChange(key)}
-          >
-            {label}
-            {key === 'reservasi' && newBkCount > 0 ? ` (${newBkCount})` : ''}
-          </button>
-        ))}
-      </div>
-    </>
-  );
+  const tabs = isOwner ? [['kasir','Kasir'],['reservasi','Reservasi'],['promo','Promo'],['layanan','Layanan'],['akun','Akun'],['pengeluaran','Pengeluaran'],['pengaturan','Pengaturan'],['laporan','Laporan']] : [['kasir','Kasir'],['reservasi','Reservasi'],['pengeluaran','Pengeluaran'],['daftar','Daftar Transaksi']];
+  const select = (key) => { setTab(key); if (key === 'reservasi') setNewBkCount(0); if (onSelectTab) onSelectTab(key); };
+  return <>
+    <button className="mobile-menu-button" type="button" aria-expanded={sidebarOpen} onClick={onToggleSidebar}>☰ Menu</button>
+    <aside className={`app-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <button className="sidebar-profile" type="button" onClick={onOpenProfile}>Profil</button>
+      <nav>{tabs.map(([key, label]) => <button key={key} className={tab === key ? 'on' : ''} onClick={() => select(key)}>{label}{key === 'reservasi' && newBkCount > 0 ? ` (${newBkCount})` : ''}</button>)}</nav>
+    </aside>
+  </>;
 }
