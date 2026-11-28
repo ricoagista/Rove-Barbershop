@@ -506,7 +506,8 @@ th, td {
   gap: 6px;
 }
 
-.q button {
+.q button,
+.q-spacer {
   width: 44px;
   height: 44px;
   padding: 0;

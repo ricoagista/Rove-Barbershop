@@ -308,7 +308,7 @@ export default function BookingPage() {
                       </span>
                       {s.kat === 'Hair Cut' && peopleCount > 1 && selectedCount > 0 && (
                         <span className="q" onClick={(e) => e.stopPropagation()}>
-                          {selectedCount > 1 && <button type="button" aria-label={`Kurangi ${s.nama}`} onClick={() => changeHairCutQty(s.id, -1)}>−</button>}
+                          {selectedCount > 1 ? <button type="button" aria-label={`Kurangi ${s.nama}`} onClick={() => changeHairCutQty(s.id, -1)}>−</button> : <span className="q-spacer" aria-hidden="true" />}
                           {selectedCount}
                           <button type="button" aria-label={`Tambah ${s.nama}`} onClick={() => changeHairCutQty(s.id, 1)}>+</button>
                         </span>
