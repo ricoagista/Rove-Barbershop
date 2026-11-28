@@ -93,6 +93,12 @@ h2 {
   box-shadow: none;
 }
 
+.profile-form,
+.profile-section form {
+  display: grid;
+  gap: 12px;
+}
+
 .profile-avatar-preview {
   display: block;
   width: 160px;
@@ -715,7 +721,7 @@ label {
 
   .profile-section {
     margin-top: 24px;
-    padding-top: 20px;
+    padding-top: 24px;
     border-top: 1px solid var(--border);
   }
 
