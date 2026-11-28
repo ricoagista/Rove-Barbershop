@@ -114,10 +114,6 @@ h2 {
   justify-content: space-between;
   gap: 12px;
   min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface-2);
 }
 
 .security-toggle-row .switch {
@@ -125,7 +121,7 @@ h2 {
   min-height: 40px;
   padding: 8px 12px;
   border-radius: 10px;
-  background: var(--surface);
+  background: transparent;
 }
 
 .security-toggle-row .switch.on {
