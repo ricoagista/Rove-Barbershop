@@ -450,7 +450,7 @@ export default function ReportPage({ onReprint }) {
       )}
 
       {editingTrx && (
-        <div className="card">
+        <div className="card edit-transaction-card">
           <h2>Edit Transaksi ({editingTrx.nomor})</h2>
           <p className="mu">
             {editingTrx.edit_ts
