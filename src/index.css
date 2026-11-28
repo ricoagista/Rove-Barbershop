@@ -214,6 +214,7 @@ h2 {
 .tabs button {
   padding: 9px 18px;
   white-space: nowrap;
+  border-radius: 12px;
 }
 
 button {
