@@ -154,7 +154,13 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     setSaving(true);
     try {
       const now = new Date();
-      const itemsPayload = cartEntries.map(({ svc, qty }) => ({ id: svc.id, qty }));
+      const itemsPayload = cartEntries.map(({ svc, qty }) => ({
+        id: svc.id,
+        nama: svc.nama,
+        harga: Number(svc.harga) || 0,
+        kat: svc.kat,
+        qty,
+      }));
 
       const payload = {
         ts: now.toISOString(),

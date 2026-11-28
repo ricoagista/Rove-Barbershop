@@ -63,12 +63,21 @@ export default function ReportPage({ onReprint }) {
     return expenses.filter((e) => inRange(e.tanggal, activeRange));
   }, [expenses, activeRange]);
 
-  const formatSaleItems = (items) => (Array.isArray(items) ? items : []).map((item) => {
+  const normalizeSaleItems = (items) => (Array.isArray(items) ? items : []).map((item) => {
     const service = services.find((s) => s.id === item.id || s.nama === item.nama);
-    const nama = item.nama || service?.nama || 'Layanan tidak diketahui';
-    const qty = Number(item.qty) || 0;
-    return `${nama} (${qty})`;
-  }).join(', ');
+    return {
+      ...item,
+      id: item.id || service?.id,
+      nama: item.nama || service?.nama || 'Layanan tidak diketahui',
+      harga: Number(item.harga ?? service?.harga) || 0,
+      kat: item.kat || service?.kat,
+      qty: Number(item.qty) || 0,
+    };
+  });
+
+  const formatSaleItems = (items) => normalizeSaleItems(items)
+    .map((item) => `${item.nama} (${item.qty})`)
+    .join(', ');
 
   const stats = useMemo(() => {
     let omset = 0;
@@ -133,17 +142,7 @@ export default function ReportPage({ onReprint }) {
     setEditPelanggan(s.pelanggan || '');
     setEditWa(s.wa || '');
     setEditMetode(s.metode || 'Tunai');
-    setEditItems((Array.isArray(s.items) ? s.items : []).map((item) => {
-      const service = services.find((svc) => svc.id === item.id || svc.nama === item.nama);
-      return {
-        ...item,
-        id: item.id || service?.id,
-        nama: item.nama || service?.nama || 'Layanan tidak diketahui',
-        harga: Number(item.harga ?? service?.harga) || 0,
-        qty: Number(item.qty) || 0,
-        kat: item.kat || service?.kat,
-      };
-    }));
+    setEditItems(normalizeSaleItems(s.items));
     setEditTotal(String(s.total || 0));
     setEditErr('');
   };
@@ -154,7 +153,7 @@ export default function ReportPage({ onReprint }) {
     if (!editPelanggan.trim()) return setEditErr('Nama pelanggan wajib diisi.');
     const cleanWa = normWa(editWa);
     if (!cleanWa) return setEditErr('Nomor WhatsApp tidak valid.');
-    const items = editItems.filter((item) => item.qty > 0 && item.nama.trim());
+    const items = normalizeSaleItems(editItems).filter((item) => item.qty > 0 && item.nama.trim());
     if (!items.length) return setEditErr('Pilih minimal satu layanan.');
     const subtotal = items.reduce((sum, item) => sum + Number(item.harga || 0) * Number(item.qty || 0), 0);
     const numTotal = Number(editTotal) || subtotal;
@@ -400,8 +399,8 @@ export default function ReportPage({ onReprint }) {
           <form onSubmit={handleSaveEdit}>
             <label>Layanan</label>
             {editItems.map((item, index) => (
-              <div key={`${item.nama}-${index}`} className="row">
-                <span>{item.nama}</span>
+              <div key={`${item.id || item.nama}-${index}`} className="row">
+                <span>{item.nama || 'Layanan tidak diketahui'}</span>
                 <span className="q"><button type="button" onClick={() => setEditItems((prev) => prev.map((v, i) => i === index ? { ...v, qty: Math.max(0, Number(v.qty) - 1) } : v))}>−</button>{item.qty}<button type="button" onClick={() => setEditItems((prev) => prev.map((v, i) => i === index ? { ...v, qty: Number(v.qty) + 1 } : v))}>+</button></span>
               </div>
             ))}
