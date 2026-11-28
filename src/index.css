@@ -222,11 +222,13 @@ label {
 }
 
 .extra-sheet {
-  margin-top: 12px;
+  margin: 12px 0;
   padding: 16px;
   background: var(--surface-2);
   border: 1px solid var(--accent);
   border-radius: 20px;
+  position: relative;
+  z-index: 0;
 }
 
 .extra-sheet h3 {
