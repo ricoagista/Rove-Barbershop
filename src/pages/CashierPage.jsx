@@ -109,6 +109,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     setBkId(id);
     setErr('');
     const bk = bookings.find((b) => b.id === id);
+    if (me.role === 'capster' && bk?.kap_id !== me.id) {
+      setErr('Reservasi ini ditujukan untuk capster lain. Pastikan pergantian capster sudah disetujui.');
+    }
     if (!bk) {
       setCustName('');
       setCustWa('');
