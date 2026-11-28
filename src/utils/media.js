@@ -84,7 +84,14 @@ export async function processSquareAvatar(file, size = 240, quality = 0.8) {
   c.width = c.height = size;
   const m = Math.min(im.width, im.height);
   c.getContext('2d').drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, size, size);
-  return c.toDataURL('image/jpeg', quality);
+  let q = quality;
+  let result = c.toDataURL('image/jpeg', q);
+  while (result.length > 1024 * 1024 * 1.37 && q > 0.35) {
+    q -= 0.1;
+    result = c.toDataURL('image/jpeg', q);
+  }
+  if (result.length > 1024 * 1024 * 1.37) throw new Error('Foto terlalu besar setelah dikompres.');
+  return result;
 }
 
 export async function processExpenseImage(file, maxWidth = 1280, quality = 0.72) {

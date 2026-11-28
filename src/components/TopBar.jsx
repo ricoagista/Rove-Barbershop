@@ -8,9 +8,14 @@ export default function TopBar({ onSelectTab }) {
     setTab,
     newBkCount,
     setNewBkCount,
+    isServiceOpen,
+    openService,
+    closeService,
   } = useApp();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shiftBusy, setShiftBusy] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
 
   if (!me) return null;
 
@@ -35,6 +40,13 @@ export default function TopBar({ onSelectTab }) {
         ['daftar', 'Daftar Transaksi'],
       ];
 
+  const handleShift = async () => {
+    if (shiftBusy) return;
+    if (isServiceOpen && !confirmClose) return setConfirmClose(true);
+    setShiftBusy(true); setConfirmClose(false);
+    try { await (isServiceOpen ? closeService() : openService()); } finally { setShiftBusy(false); }
+  };
+
   const handleTabChange = (key) => {
     setTab(key);
     if (key === 'reservasi') setNewBkCount(0);
@@ -44,6 +56,12 @@ export default function TopBar({ onSelectTab }) {
 
   return (
     <>
+      <div className="top-shift-bar">
+        <span>Service {isServiceOpen ? 'terbuka' : 'tertutup'}</span>
+        <button className={isServiceOpen ? 'cl' : 'ok'} disabled={shiftBusy} onClick={handleShift}>
+          {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
+        </button>
+      </div>
       <button className="menu-toggle" type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
         {menuOpen ? 'Tutup menu' : 'Menu'}
       </button>

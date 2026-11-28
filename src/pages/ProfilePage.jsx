@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { roleName, normWa } from '../utils/format';
+import { processSquareAvatar } from '../utils/media';
 import { supabase } from '../lib/supabase';
 
 export default function ProfilePage() {
@@ -21,6 +22,15 @@ export default function ProfilePage() {
   useEffect(() => {
     setForm({ name: me?.name || '', wa: me?.wa || '', photo_url: me?.photo_url || '' });
   }, [me]);
+
+  const handlePhotoUpload = async (file) => {
+    if (!file) return;
+    try {
+      const photo_url = await processSquareAvatar(file, 320, 0.82);
+      setForm((current) => ({ ...current, photo_url }));
+      setError('');
+    } catch (ex) { setError(ex?.message || 'Gagal mengompres foto.'); }
+  };
 
   const saveProfile = async (e) => {
     e.preventDefault();
@@ -51,6 +61,11 @@ export default function ProfilePage() {
   return (
     <div className="profile-page">
       <div className="card profile-card">
+        <div className="profile-actions profile-shift-actions">
+          <button className={isServiceOpen ? 'cl' : 'ok'} disabled={busy} onClick={handleShift}>
+            {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
+          </button>
+        </div>
         <h1>Profil Saya</h1>
         <div className="profile-identity">
           <b>{me.name}</b>
@@ -61,13 +76,11 @@ export default function ProfilePage() {
         <form onSubmit={saveProfile}>
           <label>Nama lengkap<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} /></label>
           <label>Nomor WhatsApp<input value={form.wa} onChange={(e) => setForm({ ...form, wa: e.target.value })} inputMode="tel" maxLength={20} /></label>
-          <label>URL foto profil<input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} type="url" placeholder="https://..." /></label>
+          <label>Foto profil<input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e.target.files?.[0])} /></label>
+          {form.photo_url && <img className="profile-avatar-preview" src={form.photo_url} alt="Pratinjau foto profil" />}
           <button className="p" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Profil'}</button>
         </form>
         <div className="profile-actions">
-          <button className={isServiceOpen ? 'cl' : 'ok'} disabled={busy} onClick={handleShift}>
-            {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
-          </button>
           <button type="button" onClick={logout}>Keluar</button>
         </div>
       </div>

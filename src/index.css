@@ -155,6 +155,18 @@ h2 {
   margin: 0;
 }
 
+.top-shift-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.top-shift-bar button {
+  min-height: 44px;
+}
+
 .menu-toggle {
   display: none;
 }
@@ -566,6 +578,15 @@ label {
     margin: 0;
   }
 
+  .profile-avatar-preview {
+    display: block;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin: 4px 0 12px;
+  }
+
   .profile-link {
     grid-column: 1 / -1;
     width: 100%;
@@ -598,6 +619,14 @@ label {
     grid-column: 2;
     flex: none;
     width: 100%;
+  }
+
+  .top-shift-bar {
+    margin-bottom: 8px;
+  }
+
+  .top-shift-bar button {
+    flex: 0 0 auto;
   }
 
   .menu-toggle {
