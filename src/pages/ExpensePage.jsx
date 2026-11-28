@@ -15,6 +15,7 @@ export default function ExpensePage() {
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
   const [bukti, setBukti] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   const [filterDate, setFilterDate] = useState(ld());
 
@@ -45,26 +46,44 @@ export default function ExpensePage() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('expenses').insert({
-        ts: new Date().toISOString(),
+      const payload = {
         tanggal,
         kategori,
         nama: cleanName,
         biaya: numBiaya,
-        oleh_id: me.id,
-        oleh_nama: me.name,
         bukti_url: bukti || null,
-      });
+      };
+      const query = editingId
+        ? supabase.from('expenses').update(payload).eq('id', editingId).eq('oleh_id', me.id)
+        : supabase.from('expenses').insert({
+          ...payload,
+          ts: new Date().toISOString(),
+          oleh_id: me.id,
+          oleh_nama: me.name,
+        });
+      const { error } = await query;
       if (error) throw error;
       setNama('');
       setBiaya('');
       setBukti('');
+      setEditingId(null);
       await refreshAll();
     } catch (ex) {
       setErr(ex?.message || 'Gagal menyimpan pengeluaran.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const startEdit = (expense) => {
+    if (!isOwner && expense.oleh_id !== me.id) return;
+    setEditingId(expense.id);
+    setKategori(expense.kategori);
+    setNama(expense.nama);
+    setBiaya(String(expense.biaya));
+    setTanggal(expense.tanggal);
+    setBukti(expense.bukti_url || '');
+    setErr('');
   };
 
   const handleDelete = async (id) => {
@@ -85,7 +104,7 @@ export default function ExpensePage() {
       )}
 
       <div className="card">
-        <h2>Catat pengeluaran</h2>
+        <h2>{editingId ? 'Edit pengeluaran' : 'Catat pengeluaran'}</h2>
         <form onSubmit={handleSave}>
           <label>Kategori</label>
           <select value={kategori} onChange={(e) => setKategori(e.target.value)}>
@@ -148,7 +167,7 @@ export default function ExpensePage() {
             style={{ width: '100%' }}
             disabled={!isServiceOpen || saving}
           >
-            {saving ? 'Menyimpan...' : 'Simpan pengeluaran'}
+            {saving ? 'Menyimpan...' : editingId ? 'Simpan perubahan' : 'Simpan pengeluaran'}
           </button>
         </form>
       </div>
@@ -179,6 +198,7 @@ export default function ExpensePage() {
               <th>Biaya</th>
               <th>Oleh</th>
               <th>Bukti</th>
+              <th></th>
               {isOwner && <th></th>}
             </tr>
           </thead>
@@ -193,6 +213,7 @@ export default function ExpensePage() {
                   <td>{rp(e.biaya)}</td>
                   <td>{e.oleh_nama}</td>
                   <td>{e.bukti_url ? <a href={e.bukti_url} target="_blank" rel="noreferrer">Lihat bukti</a> : '-'}</td>
+                  {(isOwner || e.oleh_id === me.id) && <td><button type="button" onClick={() => startEdit(e)}>Edit</button></td>}
                   {isOwner && (
                     <td>
                       <button
@@ -208,7 +229,7 @@ export default function ExpensePage() {
               ))
             ) : (
               <tr>
-                <td colSpan={isOwner ? 8 : 7} className="mu">
+                <td colSpan={isOwner ? 9 : 8} className="mu">
                   Belum ada catatan pengeluaran.
                 </td>
               </tr>
