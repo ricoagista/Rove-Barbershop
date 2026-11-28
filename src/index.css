@@ -184,16 +184,17 @@ h2 {
   flex: 0 0 auto;
   min-height: 44px;
   min-width: 116px;
-  border: 1px solid transparent;
-  color: #fff;
+  border: 1px solid currentColor;
+  color: var(--text);
+  background: transparent;
 }
 
 .shift-button.open {
-  background: var(--ok);
+  color: var(--ok);
 }
 
 .shift-button.close {
-  background: var(--bad);
+  color: var(--bad);
 }
 
 .menu-toggle {
