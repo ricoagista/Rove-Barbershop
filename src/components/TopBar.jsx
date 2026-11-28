@@ -15,8 +15,8 @@ const icons = {
   daftar: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h13M7 12h13M7 19h13M3 5h.01M3 12h.01M3 19h.01" /></svg>,
   default: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" /><path d="M12 8v4l3 2" /></svg>,
   menu: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>,
-  open: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18V6h12v12M9 12h6" /></svg>,
-  close: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18V6h12v12M9 9l6 6m0-6-6 6" /></svg>,
+  open: null,
+  close: null,
 };
 
 export default function TopBar({ onSelectTab }) {
@@ -80,8 +80,7 @@ export default function TopBar({ onSelectTab }) {
           <span>{roleName(me.role)}</span>
         </div>
         <button className={`shift-button ${isServiceOpen ? 'close' : 'open'}`} disabled={shiftBusy} onClick={handleShift}>
-          <span className="nav-icon">{icons[isServiceOpen ? 'close' : 'open']}</span>
-          <span>{isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}</span>
+          {isServiceOpen ? (confirmClose ? 'Yakin Close?' : 'Close Service') : 'Open Service'}
         </button>
       </div>
       <button className="menu-toggle" type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
