@@ -448,7 +448,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
             </button>
           </>
         ) : (
-          <p className="mu">Pastikan pembayaran QRIS sudah masuk sebelum menekan Bayar.</p>
+          <p className="payment-hint"><svg className="payment-hint-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M7 9h10M7 13h4" /></svg><span>Pastikan pembayaran QRIS sudah masuk sebelum menekan Bayar.</span></p>
         )}
 
         {err && <div className="err">{err}</div>}
