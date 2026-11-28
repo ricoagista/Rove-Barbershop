@@ -539,12 +539,17 @@ export default function ReportPage({ onReprint }) {
                   <td>{s.metode}</td>
                   <td>{rp(s.total)}</td>
                   <td className="mu">
-                    {s.edit_ts ? (
-                      <>
-                        <div>Diedit {tstr(s.edit_ts)} oleh {s.edit_oleh || 'staf tidak diketahui'}</div>
-                        <button type="button" onClick={() => setHistorySale(s)}>Lihat riwayat</button>
-                      </>
-                    ) : 'Belum diedit'}
+                    {(() => {
+                      const audits = salesEditHistory.filter((item) => item.sale_id === s.id);
+                      const latest = audits[0];
+                      if (!s.edit_ts && !latest) return 'Belum diedit';
+                      return (
+                        <>
+                          <div>{latest?.reason || 'Edit transaksi'} oleh {latest?.edited_by_name || s.edit_oleh || 'staf tidak diketahui'}</div>
+                          <button type="button" onClick={() => setHistorySale(s)}>Lihat riwayat ({audits.length || 1})</button>
+                        </>
+                      );
+                    })()}
                   </td>
                   <td>
                     <button
