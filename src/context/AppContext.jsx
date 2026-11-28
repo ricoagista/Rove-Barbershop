@@ -22,6 +22,7 @@ export function AppProvider({ children }) {
   const [salesEditHistory, setSalesEditHistory] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [shifts, setShifts] = useState([]);
+  const [publicShifts, setPublicShifts] = useState([]);
   const [settings, setSettings] = useState({});
 
   const [ready, setReady] = useState(false);
@@ -33,16 +34,18 @@ export function AppProvider({ children }) {
   // 1. Fetch data publik (tanpa login)
   const loadPublicData = useCallback(async () => {
     if (!supabase) return;
-    const [svcRes, capRes, slotRes, setRes] = await Promise.all([
+    const [svcRes, capRes, slotRes, setRes, shiftRes] = await Promise.all([
       supabase.from('services').select('*').order('created_at', { ascending: true }),
       supabase.from('public_capsters').select('*').order('name', { ascending: true }),
       supabase.from('public_booked_slots').select('*'),
       supabase.from('public_booking_settings').select('*').maybeSingle(),
+      supabase.from('public_capster_shifts').select('*'),
     ]);
 
     if (svcRes.data) setServices(svcRes.data);
     if (capRes.data) setCapsters(capRes.data);
     if (slotRes.data) setBookedSlots(slotRes.data);
+    if (shiftRes.data) setPublicShifts(shiftRes.data);
     if (setRes.data) {
       setSettings((prev) => ({
         ...prev,
@@ -242,6 +245,10 @@ export function AppProvider({ children }) {
 
   const shiftToday = me ? shifts.find((x) => x.id === `${ld()}_${me.id}`) : null;
   const isServiceOpen = Boolean(shiftToday && shiftToday.status === 'open');
+  const isCapsterActive = (id) => {
+    const shift = [...shifts, ...publicShifts].find((x) => x.id === `${ld()}_${id}`);
+    return Boolean(shift && shift.status === 'open');
+  };
 
   const openService = async () => {
     if (!me) return;
@@ -295,6 +302,8 @@ export function AppProvider({ children }) {
         salesEditHistory,
         expenses,
         shifts,
+        publicShifts,
+        isCapsterActive,
         settings,
         brand,
         kontak,

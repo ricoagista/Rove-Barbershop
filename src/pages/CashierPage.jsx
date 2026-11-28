@@ -12,6 +12,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     promos,
     bookings,
     capsters,
+    isCapsterActive,
     isServiceOpen,
     refreshAll,
   } = useApp();
@@ -129,6 +130,10 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
       return setErr('Tekan Open Service dulu untuk memulai transaksi.');
     }
 
+    if (me.role === 'capster' && !isCapsterActive(me.id)) {
+      return setErr('Anda sedang tidak shift dan tidak dapat dipilih untuk transaksi.');
+    }
+
     const activeCap =
       me.role === 'capster'
         ? { id: me.id, name: me.name }
@@ -136,6 +141,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
 
     if (!activeCap) {
       return setErr('Pilih capster yang melayani.');
+    }
+    if (!isCapsterActive(activeCap.id)) {
+      return setErr('Capster tersebut sedang tidak shift dan tidak dapat dipilih.');
     }
     if (!hairCutCount) {
       return setErr('Pilih minimal satu layanan Hair Cut.');

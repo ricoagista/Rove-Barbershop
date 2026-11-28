@@ -30,6 +30,7 @@ export default function BookingPage() {
     services,
     capsters,
     bookedSlots,
+    isCapsterActive,
     refreshAll,
   } = useApp();
 
@@ -375,7 +376,8 @@ export default function BookingPage() {
             ) : (
               <div className="grid">
                 {capsters.map((c) => {
-                  const busy = Boolean(jam) && isCapsterBusy(c.id, tanggal, jam);
+                  const inactive = !isCapsterActive(c.id);
+                  const busy = inactive || (Boolean(jam) && isCapsterBusy(c.id, tanggal, jam));
                   return (
                     <button
                       type="button"
@@ -390,7 +392,7 @@ export default function BookingPage() {
                         <i>✂️</i>
                       )}
                       <b>{c.name}</b>
-                      <span>{busy ? 'Penuh di jam ini' : jam ? 'Tersedia' : 'Pilih jam untuk cek'}</span>
+                      <span>{inactive ? 'Sedang tidak shift' : busy ? 'Penuh di jam ini' : jam ? 'Tersedia' : 'Pilih jam untuk cek'}</span>
                     </button>
                   );
                 })}
