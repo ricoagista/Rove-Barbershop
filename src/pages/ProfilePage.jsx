@@ -4,6 +4,11 @@ import { normWa } from '../utils/format';
 import { processSquareAvatar } from '../utils/media';
 import { supabase } from '../lib/supabase';
 
+const ActionIcon = ({ type }) => {
+  const paths = { save: 'M5 4h12l2 2v14H5zM8 4v5h8V4M8 15h8', lock: 'M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5z', logout: 'M10 5H5v14h5M13 8l4 4-4 4M9 12h8' };
+  return <svg className="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d={paths[type]} /></svg>;
+};
+
 export default function ProfilePage() {
   const { me, logout, refreshAll } = useApp();
   const [form, setForm] = useState({ name: me?.name || '', wa: me?.wa || '', photo_url: me?.photo_url || '' });
@@ -70,7 +75,7 @@ export default function ProfilePage() {
           <label>Nomor WhatsApp<input value={form.wa} onChange={(e) => setForm({ ...form, wa: e.target.value })} inputMode="tel" maxLength={20} /></label>
           <label>Foto profil<input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e.target.files?.[0])} /></label>
           {form.photo_url && <img className="profile-avatar-preview" src={form.photo_url} alt="Pratinjau foto profil" />}
-          <button className="p" disabled={saving}>{saving ? 'Menyimpan...' : 'Simpan Profil'}</button>
+          <button className="p action-button" disabled={saving}><ActionIcon type="save" />{saving ? 'Menyimpan...' : 'Simpan Profil'}</button>
         </form>
         <div className="profile-section">
           <h2>Ubah Password</h2>
@@ -78,11 +83,11 @@ export default function ProfilePage() {
           {passwordMessage && <p className="ok">{passwordMessage}</p>}
           <form onSubmit={changePassword}>
             <label>Password baru<input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={6} autoComplete="new-password" /></label>
-            <button className="p" disabled={passwordSaving}>{passwordSaving ? 'Menyimpan...' : 'Ubah Password'}</button>
+            <button className="p action-button" disabled={passwordSaving}><ActionIcon type="lock" />{passwordSaving ? 'Menyimpan...' : 'Ubah Password'}</button>
           </form>
         </div>
         <div className="profile-actions">
-          <button type="button" onClick={logout}>Logout</button>
+          <button type="button" className="action-button" onClick={logout}><ActionIcon type="logout" />Logout</button>
         </div>
       </div>
     </div>
