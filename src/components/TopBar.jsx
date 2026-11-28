@@ -88,7 +88,7 @@ export default function TopBar({ onSelectTab }) {
               <br />
             </>
           )}
-          <span>
+          <span className="user-role">
             {me.name} · {roleName(me.role)}
           </span>
         </div>
