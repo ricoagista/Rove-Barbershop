@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { roleName } from '../utils/format';
 
-export default function TopBar({ onSelectTab }) {
+export default function TopBar({ onSelectTab, onProfile }) {
   const {
     me,
     brand,
@@ -88,7 +88,7 @@ export default function TopBar({ onSelectTab }) {
               <br />
             </>
           )}
-          <span className="user-role">
+          <span>
             {me.name} · {roleName(me.role)}
           </span>
         </div>
@@ -103,6 +103,7 @@ export default function TopBar({ onSelectTab }) {
               : 'Close Service'
             : 'Open Service'}
         </button>
+        <button className="profile-button" onClick={onProfile}>Profil</button>
         <button onClick={logout}>Keluar</button>
       </div>
 

@@ -76,13 +76,14 @@ function MainRouter() {
     };
 
     const settingsPath = path.startsWith('/pengaturan/') ? path : '/pengaturan/policy';
+    const profilePath = path === '/profile';
 
     return (
       <div className="wrap">
-        <TopBar onSelectTab={handleTabChange} />
+        <TopBar onSelectTab={handleTabChange} onProfile={() => navigate('/profile')} />
 
         <main>
-        {tab === 'kasir' && (
+        {profilePath ? <div className="card profile-page"><h2>{me.name}</h2><p className="mu">{me.username ? `@${me.username}` : ''}</p><p>{me.name} · {me.role}</p><button className="d" onClick={logout}>Keluar</button></div> : tab === 'kasir' && (
           <CashierPage
             externalReceipt={reprintReceipt}
             onClearExternalReceipt={() => setReprintReceipt(null)}
