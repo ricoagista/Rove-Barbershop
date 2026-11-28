@@ -479,10 +479,7 @@ export default function ReportPage({ onReprint }) {
             {filteredSales.length ? (
               filteredSales.map((s) => (
                 <tr key={s.id}>
-                  <td>
-                    {s.nomor}
-                    {s.edit_ts && <div className="mu">Diedit: {s.edit_oleh}</div>}
-                  </td>
+                  <td>{s.nomor}</td>
                   <td>{tstr(s.ts)}</td>
                   <td>{s.pelanggan}</td>
                   <td>{s.jenis === 'reservasi' ? 'Reservasi' : 'Regular'}</td>
