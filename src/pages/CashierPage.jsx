@@ -280,16 +280,30 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         {ptype === 'reservasi' ? (
           activeBookings.length ? (
             <>
-              <label>Pilih reservasi *</label>
-              <select value={bkId} onChange={(e) => handlePickBooking(e.target.value)}>
-                <option value="">Pilih reservasi…</option>
+              <div className="reservation-picker-heading">
+                <label>Pilih reservasi *</label>
+                <span className="mu">{activeBookings.length} aktif</span>
+              </div>
+              <div className="reservation-list" role="listbox" aria-label="Daftar reservasi aktif">
                 {activeBookings.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.tanggal} {b.jam} · {b.nama} · {b.svc_nama}
-                  </option>
+                  <button
+                    key={b.id}
+                    type="button"
+                    className={`reservation-option ${bkId === b.id ? 'selected' : ''}`}
+                    onClick={() => handlePickBooking(b.id)}
+                    aria-selected={bkId === b.id}
+                  >
+                    <span className="reservation-time">{b.jam}</span>
+                    <span className="reservation-details">
+                      <b>{b.nama}</b>
+                      <span>{b.svc_nama || 'Layanan belum dicatat'}</span>
+                      <small>{b.tanggal} · {b.kap_nama || 'Capster belum dipilih'}</small>
+                    </span>
+                    <span className="reservation-status">{b.status}</span>
+                  </button>
                 ))}
-              </select>
-              {pickedBooking && <p className="mu">{pickedBooking.nama} · {pickedBooking.wa} · Capster {pickedBooking.kap_nama}</p>}
+              </div>
+              {pickedBooking && <p className="reservation-selected">Reservasi dipilih untuk {pickedBooking.nama}</p>}
             </>
           ) : <p className="mu">Belum ada reservasi aktif.</p>
         ) : null}
