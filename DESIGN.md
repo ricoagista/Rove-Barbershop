@@ -182,7 +182,14 @@ Latar warna status dengan opasitas 16%, teks warna status penuh, radius 999px.
 
 ---
 
-## 8. Checklist
+## 8. Keputusan visual aplikasi staf
+
+- Top bar memakai pola app bar 56px dengan garis bawah agar identitas staf dan kontrol service tetap terlihat tanpa menjadi card tambahan.
+- Navigasi memakai tombol kapsul 999px karena DESIGN.md menetapkan tombol dan chip sebagai kontrol yang mudah dipindai dan disentuh.
+- Ikon garis 1.5px dipakai hanya pada navigasi untuk membedakan fungsi halaman tanpa emoji atau dekorasi yang tidak bermakna.
+- Status service memakai `--success` dan `--danger`, disertai label Open/Close sehingga status tidak bergantung pada warna saja.
+
+## 9. Checklist
 
 - [ ] Hanya memakai token warna.
 - [ ] Tidak ada teks atau ikon berwarna `--accent` di latar gelap.

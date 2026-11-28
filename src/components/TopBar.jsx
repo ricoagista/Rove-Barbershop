@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { roleName } from '../utils/format';
 
+const icons = {
+  profile: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3" /><path d="M5 20c.8-3.2 3.2-5 7-5s6.2 1.8 7 5" /></svg>,
+  kasir: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M8 9h8M8 13h2m2 0h2m2 0h2" /></svg>,
+  reservasi: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4m8-4v4M4 10h16" /></svg>,
+  default: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" /><path d="M12 8v4l3 2" /></svg>,
+};
+
 export default function TopBar({ onSelectTab }) {
   const {
     me,
@@ -73,10 +80,11 @@ export default function TopBar({ onSelectTab }) {
         {tabs.map(([key, label]) => (
           <button
             key={key}
-            className={`${tab === key ? 'on' : ''} ${key === 'kasir' ? 'kasir-tab' : ''}`}
+            className={tab === key ? 'on' : ''}
             onClick={() => handleTabChange(key)}
           >
-            {label}
+            <span className="nav-icon">{icons[key] || icons.default}</span>
+            <span>{label}</span>
             {key === 'reservasi' && newBkCount > 0 ? ` (${newBkCount})` : ''}
           </button>
         ))}

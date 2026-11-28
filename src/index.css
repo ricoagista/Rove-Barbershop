@@ -160,11 +160,11 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-height: 56px;
   margin-bottom: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface-2);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 
 .top-user-info {
@@ -193,11 +193,11 @@ h2 {
 }
 
 .shift-button.open {
-  color: var(--ok);
+  color: var(--success);
 }
 
 .shift-button.close {
-  color: var(--bad);
+  color: var(--danger);
 }
 
 .menu-toggle {
@@ -212,9 +212,30 @@ h2 {
 }
 
 .tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
   padding: 9px 18px;
   white-space: nowrap;
-  border-radius: 12px;
+  border-radius: 999px;
+}
+
+.nav-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  color: currentColor;
+}
+
+.nav-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 button {
