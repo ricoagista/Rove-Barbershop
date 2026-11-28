@@ -386,12 +386,13 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
                 type="button"
                 role="option"
                 aria-selected={promoId === p.id}
-                className={`promo-option ${promoId === p.id ? 'selected' : ''}`}
-                onClick={() => setPromoId(p.id)}
+                className={`promo-option ${promoId === p.id ? 'selected' : ''} ${(p.kuota || 0) <= (p.terpakai || 0) ? 'disabled' : ''}`}
+                onClick={() => (p.kuota || 0) > (p.terpakai || 0) && setPromoId(p.id)}
+                disabled={(p.kuota || 0) <= (p.terpakai || 0)}
               >
                 <span className="promo-option-info">
                   <strong>{p.nama}</strong>
-                  <span>Potongan {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)}</span>
+                  <span>Potongan {p.tipe === 'persen' ? `${p.nilai}%` : rp(p.nilai)} · Sisa kuota: {Math.max(0, (p.kuota || 0) - (p.terpakai || 0))}</span>
                 </span>
                 <span className="promo-option-status">{promoId === p.id ? 'Dipilih' : 'Pilih'}</span>
               </button>
