@@ -17,6 +17,7 @@ import ProfilePage from './pages/ProfilePage';
 function MainRouter() {
   const { isConfigured, ready, sessionUser, me, tab, setTab, logout } = useApp();
   const [reprintReceipt, setReprintReceipt] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [path, setPath] = useState(window.location.pathname);
 
   useEffect(() => {
@@ -77,7 +78,6 @@ function MainRouter() {
     };
 
     const settingsPath = path.startsWith('/pengaturan/') ? path : '/pengaturan/policy';
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const openProfile = () => { setSidebarOpen(false); navigate('/profile'); };
 
     return (
