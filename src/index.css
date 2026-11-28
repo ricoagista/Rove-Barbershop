@@ -192,19 +192,12 @@ h2 {
 .payment-hint {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-  margin: 12px 0 0;
-  padding: 12px;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
   border-radius: 12px;
   font-size: 13px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
-.booking-warning-message > span,
-.payment-hint > span {
-  min-width: 0;
+  line-height: 1.4;
 }
 
 .booking-warning-message {
@@ -212,11 +205,8 @@ h2 {
   background: color-mix(in srgb, var(--danger) 12%, var(--surface));
 }
 
-.booking-picker .booking-warning-message {
-  margin-top: 4px;
-}
-
 .payment-hint {
+  margin: 12px 0;
   color: var(--info);
   border: 1px solid color-mix(in srgb, var(--info) 45%, var(--border));
   background: color-mix(in srgb, var(--info) 10%, var(--surface));
