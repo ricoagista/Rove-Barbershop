@@ -280,7 +280,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         {ptype === 'reservasi' ? (
           activeBookings.length ? (
             <div className="booking-picker">
-              <label htmlFor="cashier-booking">Pilih reservasi *</label>
+              <label htmlFor="cashier-booking">Pilih reservasi</label>
               <div className="booking-options" role="listbox" aria-label="Daftar reservasi aktif">
                 {activeBookings.map((b) => (
                   <button
