@@ -80,6 +80,12 @@ export default function ReportPage({ onReprint }) {
     .map((item) => `${item.nama} (${item.qty})`)
     .join(', ');
 
+  const auditValue = (data, field) => {
+    if (field === 'items') return formatSaleItems(data?.items) || '-';
+    if (field === 'diskon' || field === 'subtotal' || field === 'total') return rp(data?.[field]);
+    return data?.[field] || '-';
+  };
+
   const stats = useMemo(() => {
     let omset = 0;
     let tunai = 0;
@@ -405,20 +411,21 @@ export default function ReportPage({ onReprint }) {
               <div key={item.id} className="audit-entry">
                 <p className="mu">Diedit oleh <b>{item.edited_by_name}</b> pada {tstr(item.edited_at)}</p>
                 <div className="audit-columns">
-                  {[['Sebelum', item.before_data], ['Sesudah', item.after_data]].map(([title, data]) => (
-                    <div className="audit-column" key={title}>
-                      <h3>{title}</h3>
-                      <div className="row"><span>Pelanggan</span><b>{data?.pelanggan || '-'}</b></div>
-                      <div className="row"><span>WhatsApp</span><b>{data?.wa || '-'}</b></div>
-                      <div className="row"><span>Layanan</span><b>{formatSaleItems(data?.items) || '-'}</b></div>
-                      <div className="row"><span>Subtotal</span><b>{rp(data?.subtotal)}</b></div>
-                      <div className="row"><span>Diskon</span><b>{rp(data?.diskon)}</b></div>
-                      <div className="row"><span>Promo</span><b>{data?.promo || '-'}</b></div>
-                      <div className="row"><span>Total</span><b>{rp(data?.total)}</b></div>
-                      <div className="row"><span>Metode</span><b>{data?.metode || '-'}</b></div>
-                      <div className="row"><span>Capster</span><b>{data?.capster_nama || '-'}</b></div>
-                    </div>
-                  ))}
+                  {[
+                    ['Pelanggan', 'pelanggan'], ['WhatsApp', 'wa'], ['Layanan', 'items'],
+                    ['Subtotal', 'subtotal'], ['Diskon', 'diskon'], ['Promo', 'promo'],
+                    ['Total', 'total'], ['Metode', 'metode'], ['Capster', 'capster_nama'],
+                  ].map(([label, field]) => {
+                    const before = auditValue(item.before_data, field);
+                    const after = auditValue(item.after_data, field);
+                    const changed = before !== after;
+                    return (
+                      <div className={`audit-diff-row ${changed ? 'is-changed' : ''}`} key={field}>
+                        <span>{changed && <mark>Berubah</mark>} {label}</span>
+                        <div><b>{before}</b><span className="audit-arrow">→</span><b>{after}</b></div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}
