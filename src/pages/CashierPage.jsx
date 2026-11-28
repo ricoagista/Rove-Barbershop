@@ -459,18 +459,20 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           </p>
         ) : metode === 'Tunai' ? (
           <>
-            <label>Uang diterima *</label>
-            <input
-              inputMode="numeric"
-              value={bayar}
-              onChange={(e) => setBayar(e.target.value.replace(/\D/g, ''))}
-            />
-            {bayarNum >= total && total > 0 && (
-              <div className="mu">Kembalian: {rp(bayarNum - total)}</div>
-            )}
-            <button style={{ margin: '6px 0' }} onClick={() => setBayar(String(total))}>
-              Uang pas
-            </button>
+            <div className="cash-payment-fields">
+              <label>Uang diterima *</label>
+              <input
+                inputMode="numeric"
+                value={bayar}
+                onChange={(e) => setBayar(e.target.value.replace(/\D/g, ''))}
+              />
+              {bayarNum >= total && total > 0 && (
+                <div className="mu">Kembalian: {rp(bayarNum - total)}</div>
+              )}
+              <button onClick={() => setBayar(String(total))}>
+                Uang pas
+              </button>
+            </div>
           </>
         ) : (
           <p className="payment-hint"><svg className="payment-hint-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M7 9h10M7 13h4" /></svg><span>Pastikan pembayaran QRIS sudah masuk sebelum menekan Bayar.</span></p>

@@ -1121,6 +1121,17 @@ th, td {
   margin-top: 20px;
 }
 
+.cash-payment-fields {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cash-payment-fields button {
+  width: 100%;
+  margin: 0;
+}
+
 .payment-section label {
   color: var(--tx);
   font-weight: 600;
