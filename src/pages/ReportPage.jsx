@@ -80,11 +80,13 @@ export default function ReportPage({ onReprint }) {
     .map((item) => `${item.nama} (${item.qty})`)
     .join(', ');
 
-  const auditValue = (data, field) => {
-    if (field === 'items') return formatSaleItems(data?.items) || '-';
-    if (field === 'diskon' || field === 'subtotal' || field === 'total') return rp(data?.[field]);
-    return data?.[field] || '-';
+  const saleValue = (data, key) => {
+    if (key === 'items') return formatSaleItems(data?.items) || '-';
+    if (key === 'subtotal' || key === 'diskon' || key === 'total') return rp(data?.[key]);
+    return data?.[key] || '-';
   };
+
+  const saleChanged = (before, after, key) => JSON.stringify(before?.[key] ?? '') !== JSON.stringify(after?.[key] ?? '');
 
   const stats = useMemo(() => {
     let omset = 0;
@@ -411,21 +413,17 @@ export default function ReportPage({ onReprint }) {
               <div key={item.id} className="audit-entry">
                 <p className="mu">Diedit oleh <b>{item.edited_by_name}</b> pada {tstr(item.edited_at)}</p>
                 <div className="audit-columns">
-                  {[
-                    ['Pelanggan', 'pelanggan'], ['WhatsApp', 'wa'], ['Layanan', 'items'],
-                    ['Subtotal', 'subtotal'], ['Diskon', 'diskon'], ['Promo', 'promo'],
-                    ['Total', 'total'], ['Metode', 'metode'], ['Capster', 'capster_nama'],
-                  ].map(([label, field]) => {
-                    const before = auditValue(item.before_data, field);
-                    const after = auditValue(item.after_data, field);
-                    const changed = before !== after;
-                    return (
-                      <div className={`audit-diff-row ${changed ? 'is-changed' : ''}`} key={field}>
-                        <span>{changed && <mark>Berubah</mark>} {label}</span>
-                        <div><b>{before}</b><span className="audit-arrow">→</span><b>{after}</b></div>
-                      </div>
-                    );
-                  })}
+                  {[['Sebelum', item.before_data], ['Sesudah', item.after_data]].map(([title, data]) => (
+                    <div className="audit-column" key={title}>
+                      <h3>{title}</h3>
+                      {['pelanggan', 'wa', 'items', 'subtotal', 'diskon', 'promo', 'total', 'metode', 'capster_nama'].map((key) => (
+                        <div className={`row ${saleChanged(item.before_data, item.after_data, key) ? 'audit-changed' : ''}`} key={key}>
+                          <span>{key === 'wa' ? 'WhatsApp' : key === 'items' ? 'Layanan' : key === 'capster_nama' ? 'Capster' : key[0].toUpperCase() + key.slice(1)}</span>
+                          <b>{saleValue(data, key)}</b>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
