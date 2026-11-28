@@ -145,9 +145,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     const activeCap =
       me.role === 'capster'
         ? { id: me.id, name: me.name }
-        : ptype === 'reservasi' && pickedBooking
-          ? capsters.find((c) => c.id === pickedBooking.kap_id) || (pickedBooking.kap_id ? { id: pickedBooking.kap_id, name: pickedBooking.kap_nama } : null)
-          : capsters.find((c) => c.id === capsterId) || null;
+        : capsters.find((c) => c.id === capsterId) || null;
 
     if (!activeCap) {
       return setErr('Pilih capster yang melayani.');
@@ -390,14 +388,15 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           <span className="tot">{rp(total)}</span>
         </div>
 
-        {me.role === 'capster' || (ptype === 'reservasi' && pickedBooking) ? (
+        {me.role === 'capster' ? (
           <div className="row">
             <span>Dilayani Capster</span>
-            <b>{me.role === 'capster' ? me.name : pickedBooking.kap_nama || 'Capster reservasi'}</b>
+            <b>{me.name}</b>
           </div>
         ) : (
           <>
-            <label>Dilayani Capster *</label>
+            <label>Dilayani Capster</label>
+            {ptype === 'reservasi' && pickedBooking && <p className="booking-picker-hint">Default reservasi: {pickedBooking.kap_nama || 'belum ditentukan'}. Anda dapat menggantinya.</p>}
             <select value={capsterId} onChange={(e) => setCapsterId(e.target.value)}>
               <option value="">Pilih capster</option>
               {capsters.map((c) => (
