@@ -262,6 +262,14 @@ h2 {
   border-radius: 999px;
 }
 
+.settings-tabs {
+  flex-wrap: wrap;
+}
+
+.settings-tabs button {
+  flex: 1 1 160px;
+}
+
 .nav-icon {
   display: inline-flex;
   width: 20px;
@@ -767,6 +775,20 @@ label {
 
   .tabs {
     display: none;
+  }
+
+  .settings-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 0 0 12px;
+    padding: 0;
+    overflow: visible;
+  }
+
+  .settings-tabs button {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .tabs.menu-open {
