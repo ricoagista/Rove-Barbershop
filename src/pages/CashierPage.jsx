@@ -145,7 +145,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     const activeCap =
       me.role === 'capster'
         ? { id: me.id, name: me.name }
-        : capsters.find((c) => c.id === capsterId) || null;
+        : ptype === 'reservasi' && pickedBooking
+          ? capsters.find((c) => c.id === pickedBooking.kap_id) || (pickedBooking.kap_id ? { id: pickedBooking.kap_id, name: pickedBooking.kap_nama } : null)
+          : capsters.find((c) => c.id === capsterId) || null;
 
     if (!activeCap) {
       return setErr('Pilih capster yang melayani.');
@@ -388,10 +390,10 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
           <span className="tot">{rp(total)}</span>
         </div>
 
-        {me.role === 'capster' ? (
+        {me.role === 'capster' || (ptype === 'reservasi' && pickedBooking) ? (
           <div className="row">
             <span>Dilayani Capster</span>
-            <b>{me.name}</b>
+            <b>{me.role === 'capster' ? me.name : pickedBooking.kap_nama || 'Capster reservasi'}</b>
           </div>
         ) : (
           <>
