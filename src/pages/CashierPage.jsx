@@ -279,32 +279,25 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         </div>
         {ptype === 'reservasi' ? (
           activeBookings.length ? (
-            <>
-              <div className="reservation-picker-heading">
-                <label>Pilih reservasi *</label>
-                <span className="mu">{activeBookings.length} aktif</span>
-              </div>
-              <div className="reservation-list" role="listbox" aria-label="Daftar reservasi aktif">
+            <div className="booking-picker">
+              <label htmlFor="cashier-booking">Pilih reservasi *</label>
+              <select id="cashier-booking" value={bkId} onChange={(e) => handlePickBooking(e.target.value)}>
+                <option value="">Pilih nama atau jadwal reservasi</option>
                 {activeBookings.map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    className={`reservation-option ${bkId === b.id ? 'selected' : ''}`}
-                    onClick={() => handlePickBooking(b.id)}
-                    aria-selected={bkId === b.id}
-                  >
-                    <span className="reservation-time">{b.jam}</span>
-                    <span className="reservation-details">
-                      <b>{b.nama}</b>
-                      <span>{b.svc_nama || 'Layanan belum dicatat'}</span>
-                      <small>{b.tanggal} · {b.kap_nama || 'Capster belum dipilih'}</small>
-                    </span>
-                    <span className="reservation-status">{b.status}</span>
-                  </button>
+                  <option key={b.id} value={b.id}>
+                    {b.tanggal} · {b.jam} · {b.nama}
+                  </option>
                 ))}
-              </div>
-              {pickedBooking && <p className="reservation-selected">Reservasi dipilih untuk {pickedBooking.nama}</p>}
-            </>
+              </select>
+              {pickedBooking ? (
+                <div className="booking-picked">
+                  <strong>{pickedBooking.nama}</strong>
+                  <span>{pickedBooking.tanggal} · {pickedBooking.jam}</span>
+                  <span>{pickedBooking.svc_nama}</span>
+                  <span>{pickedBooking.wa}{pickedBooking.kap_nama ? ` · Capster ${pickedBooking.kap_nama}` : ''}</span>
+                </div>
+              ) : <p className="booking-picker-hint">Pilih reservasi untuk mengisi pelanggan dan layanan secara otomatis.</p>}
+            </div>
           ) : <p className="mu">Belum ada reservasi aktif.</p>
         ) : null}
       </div>
