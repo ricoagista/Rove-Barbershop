@@ -64,6 +64,10 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   const bayarNum = Number(bayar) || 0;
 
   const addItem = (id) => {
+    if (ptype === 'reservasi' && !bkId) {
+      setErr('Pilih reservasi terlebih dulu untuk memuat layanan.');
+      return;
+    }
     const svc = services.find((s) => s.id === id);
     if (svc?.kat === 'Hair Cut' && (cart[id] || 0) >= 1 && ptype === 'regular') {
       setErr('Hair Cut sudah dipilih. Gunakan jumlah orang untuk menambah Hair Cut.');
@@ -306,9 +310,10 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
         ) : null}
       </div>
 
-      <div className="card">
-        <h2>Pilih layanan</h2>
-        {KATS.map((kat) => {
+      <div className={`card service-picker ${ptype === 'reservasi' && !bkId ? 'service-picker-locked' : ''}`}>
+        <h2>{ptype === 'reservasi' ? 'Tambah layanan' : 'Pilih layanan'}</h2>
+        {ptype === 'reservasi' && !bkId && <p className="booking-picker-hint">Pilih reservasi terlebih dahulu untuk membuka layanan.</p>}
+        {KATS.map((kat) => { 
           const list = services.filter((v) => (v.kat || 'Hair Cut') === kat);
           if (!list.length) return null;
           return (
@@ -318,7 +323,7 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
               </div>
               <div className="grid">
                 {list.map((v) => (
-                  <button key={v.id} className="svc" onClick={() => addItem(v.id)}>
+                  <button key={v.id} className="svc" disabled={ptype === 'reservasi' && !bkId} onClick={() => addItem(v.id)}>
                     <b>{v.nama}</b>
                     <span>{rp(v.harga)}</span>
                   </button>

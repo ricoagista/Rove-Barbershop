@@ -93,6 +93,15 @@ h2 {
   box-shadow: none;
 }
 
+.service-picker-locked {
+  opacity: 0.72;
+}
+
+.service-picker-locked .svc {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .booking-picker {
   display: grid;
   gap: 8px;
