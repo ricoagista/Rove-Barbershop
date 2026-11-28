@@ -37,9 +37,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
   // Daftar reservasi aktif (Baru / Hadir)
   const activeBookings = useMemo(() => {
     return bookings
-      .filter((b) => (b.status === 'Baru' || b.status === 'Hadir') && (me.role !== 'capster' || b.kap_id === me.id))
+      .filter((b) => b.status === 'Baru' || b.status === 'Hadir')
       .sort((a, b) => `${a.tanggal}${a.jam}`.localeCompare(`${b.tanggal}${b.jam}`));
-  }, [bookings, me.id, me.role]);
+  }, [bookings]);
 
   const cartEntries = useMemo(() => {
     return Object.entries(cart)
@@ -109,6 +109,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
     setBkId(id);
     setErr('');
     const bk = bookings.find((b) => b.id === id);
+    if (me.role === 'capster' && bk?.kap_id !== me.id) {
+      setErr('Reservasi ini ditujukan untuk capster lain. Pastikan pergantian capster sudah disetujui.');
+    }
     if (!bk) {
       setCustName('');
       setCustWa('');
@@ -304,7 +307,9 @@ export default function CashierPage({ externalReceipt, onClearExternalReceipt })
                       <strong>{b.nama}</strong>
                       <span>{b.tanggal} · {b.svc_nama}</span>
                     </span>
-                    <span className="booking-option-status">{bkId === b.id ? 'Dipilih' : 'Pilih'}</span>
+                    <span className={`booking-option-status ${me.role === 'capster' && b.kap_id !== me.id ? 'booking-warning' : ''}`}>
+                      {bkId === b.id ? 'Dipilih' : me.role === 'capster' && b.kap_id !== me.id ? 'Bukan untuk Anda' : 'Pilih'}
+                    </span>
                   </button>
                 ))}
               </div>

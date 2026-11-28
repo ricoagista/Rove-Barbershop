@@ -172,6 +172,11 @@ h2 {
 .booking-option-status {
   color: var(--accent-text);
   font-weight: 600;
+  text-align: right;
+}
+
+.booking-warning {
+  color: var(--warning);
 }
 
 .booking-picked {
